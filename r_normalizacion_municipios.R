@@ -1,10 +1,17 @@
 require("stringdist")
 
+require("RPostgreSQL")
+con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=5432, user='postgres', password=1234)
+
+dbListTables(con)
+
+bahra <- dbGetQuery(con, "select * from bahra")
+
 #string as factor no esta bien agregarlo
-barha <- read.csv("/home/andres/Documents/barha.csv",stringsAsFactors = FALSE)
+#barha <- read.csv("/home/andres/Documents/barha.csv",stringsAsFactors = FALSE)
 
 #seleccionamos los valores unicos de provincias  y municipios de barha
-provincia_municipio <- unique(barha[,2:5] )
+provincia_municipio <- unique(bahra[,2:5] )
 #rm(barha)
 
 rpm <- read.csv("/home/andres/Documents/renaper_provincia_municipio.csv",stringsAsFactors = FALSE)
