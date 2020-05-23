@@ -1,76 +1,54 @@
 require("stringdist")
-
 require("RPostgreSQL")
-con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=5432, user='postgres', password=1234)
 
-dbListTables(con)
+FUENTE_ORIGEN <- "/home/andres/Documents/domicilios/extractos/distinct_pais_provincia_municipio.csv"
+COLUMNA_ORIGEN <- "MUNICIPIO"
 
-bahra <- dbGetQuery(con, "select * from bahra")
+o <- read.csv(FUENTE_ORIGEN,stringsAsFactors = FALSE)
+#habria que excluirlo en una query
+o <- o[o$PAIS == "ARGENTINA",]
+o <- o[o$PROVINCIA == "BUENOS_AIRES",]
+ORIGENES_DISTINTOS = nrow(o)
 
-#string as factor no esta bien agregarlo
-#barha <- read.csv("/home/andres/Documents/barha.csv",stringsAsFactors = FALSE)
+o$pre_norm <- tolower(o[[COLUMNA_ORIGEN]])
 
-#seleccionamos los valores unicos de provincias  y municipios de barha
-provincia_municipio <- unique(bahra[,2:5] )
-#rm(barha)
+o$pre_norm <- gsub("[^a-záéíóúñ ]+", "", o$pre_norm, perl=TRUE)
 
-rpm <- read.csv("/home/andres/Documents/renaper_provincia_municipio.csv",stringsAsFactors = FALSE)
+con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
 
-#provincia vacio no sirve
-rpm <-rpm[!rpm$PROVINCIA %in% "", ]
+n <- dbGetQuery(con, "select d.codigo, d.nombre from departamentos d
+                            inner join provincias p
+                            on d.id_provincia = p.id_provincia 
+                            where p.codigo = '06' ")
+dbDisconnect(con)
 
-#agregamos algunos ejemplos mal escritos para testear
-#renaper_provincias[nrow(renaper_provincias) + 1,] = list("Sánta Fe.","ddasd")
+NORMA_DISTINTOS = nrow(n)
 
-#todo a minusculas
-rpm$prov_comp <- tolower(rpm$PROVINCIA)
-rpm$muni_comp <- tolower(rpm$MUNICIPIO)
+n$pre_norm <- tolower(n$nombre)
 
-excluir <- c("coronel","presidente","general")
-#ver "capitan","libertador","almirante"
+n$pre_norm <- gsub("[^a-záéíóúñ0-9]+", "", n$pre_norm, perl=TRUE)
 
-
-#todo lo que no es letra y espacio lo reemplazamos por nada
-rpm$prov_comp <- gsub("[^a-záéíóúñ]+", "", rpm$prov_comp, perl=TRUE)
-rpm$muni_comp <- gsub("[^a-záéíóúñ]+", "", rpm$muni_comp, perl=TRUE)
-rpm$muni_comp <- gsub("(coronel|presidente|general)", "", rpm$muni_comp, perl=TRUE)
-provincia_municipio$nom_pcia <- tolower(provincia_municipio$nom_pcia)
-provincia_municipio$nom_pcia <- gsub("[^a-záéíóúñ]+", "", provincia_municipio$nom_pcia, perl=TRUE)
-provincia_municipio$nom_depto <- tolower(provincia_municipio$nom_depto)
-provincia_municipio$nom_depto <- gsub("[^a-záéíóúñ]+", "", provincia_municipio$nom_depto, perl=TRUE)
-provincia_municipio$nom_depto <- gsub("(coronel|presidente|general)", "", provincia_municipio$nom_depto, perl=TRUE)
-#algoritmo de distancia Levenshtein para provincias
-rpm$barha_prov <- provincia_municipio[amatch(rpm$prov_comp,provincia_municipio$nom_pcia,maxDist=3),][,c("nom_pcia","cod_pcia")]
-
-#Chequeamos los valores que no matchearon
-#valores_no_encontrados <- rpm[is.na(rpm$barha$nom_pcia),]
-
-#eliminamos los nulos 
-rpm <-rpm[!is.na(rpm$barha_prov$nom_pcia),]
-rpm$norm_muni <- NA
-
-arr_prov <- unique(provincia_municipio[,1])
-
-comparacion <- function (a) {
-
-  municipios_b <- provincia_municipio[provincia_municipio$cod_pcia == a,4]
-  municipios_r <- rpm[rpm$barha_prov$cod_pcia == a,4]
-  indexs <-  amatch(municipios_r,municipios_b,maxDist=2)
-  nrow(rpm[rpm$barha_prov$cod_pcia == a,])
-  nrow(data.frame(municipios_b[indexs]))
-  rpm[rpm$barha_prov$cod_pcia == a,]$norm_muni <<- municipios_b[indexs]
-    
-}
-
-lapply(arr_prov,comparacion)
-
-#View(rpm[,c(4,6)])
-
-excluidos <- rpm[rpm$barha_prov$cod_pcia == 6,c(4,6)]
-excluidos <- excluidos[is.na(excluidos$norm_muni),]
-
-View(excluidos)
+o[,c("norm_2","codigo_2")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=2),][,c("nombre","codigo")]
+o[,c("norm_3","codigo_3")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=3),][,c("nombre","codigo")]
+o[,c("norm_4","codigo_4")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=4),][,c("nombre","codigo")]
 
 
+#DATOS PARA ANALIZAR SI DEJAMOS ALGO IMPORTANTE AFUERA
+#A MEDIDA QUE AUMENTA EL NUMERO SE ALEJA MAS DE LA NORMA PERO INCLUYE MAS VALORES
+excluidos_2 <- o[is.na(o$norm_2),c("pre_norm","norm_2")]
+excluidos_3 <- o[is.na(o$norm_3),c("pre_norm","norm_2","norm_3")]
+excluidos_4 <- o[is.na(o$norm_4),c("pre_norm","norm_2","norm_3","norm_4")]
+
+#DATOS PARA ANALIZAR CUAL ESCOJEMOS
+o_test <- o[!is.na(o$norm_4),c(COLUMNA_ORIGEN,"norm_2","norm_3","norm_4")]
+
+#EN EL CASO TESTEADO DEJAMOS LOS VALORES NORM 2 NO VACIOS
+o <- o[!is.na(o$norm_2),c(COLUMNA_ORIGEN,"codigo_2")] 
+
+colnames(o) <- c(COLUMNA_ORIGEN, "CODIGO")
+
+NORMALIZADOS <- nrow(o)
+NO_NORMALIZADOS <- ORIGENES_DISTINTOS - NORMALIZADOS
+PORCENTAJE_NO_NORMALIZADO <- NO_NORMALIZADOS/ORIGENES_DISTINTOS*100
 
 

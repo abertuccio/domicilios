@@ -7,6 +7,7 @@ COLUMNA_ORIGEN <- "PROVINCIA"
 o <- read.csv(FUENTE_ORIGEN,stringsAsFactors = FALSE)
 #habria que excluirlo en una query
 o <- o[o$PAIS == "ARGENTINA",]
+ORIGENES_DISTINTOS = nrow(o)
 
 o$pre_norm <- tolower(o[[COLUMNA_ORIGEN]])
 
@@ -15,6 +16,8 @@ o$pre_norm <- gsub("[^a-záéíóúñ ]+", "", o$pre_norm, perl=TRUE)
 con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
 
 n <- dbGetQuery(con, "select codigo, nombre from provincias p")
+
+dbDisconnect(con)
 
 n$pre_norm <- tolower(n$nombre)
 
@@ -38,5 +41,9 @@ o_test <- o[!is.na(o$norm_4),c(COLUMNA_ORIGEN,"norm_2","norm_3","norm_4")]
 o <- o[!is.na(o$norm_2),c(COLUMNA_ORIGEN,"codigo_2")] 
 
 colnames(o) <- c(COLUMNA_ORIGEN, "CODIGO")
+
+NORMALIZADOS <- nrow(o)
+NO_NORMALIZADOS <- ORIGENES_DISTINTOS - NORMALIZADOS
+PORCENTAJE_NO_NORMALIZADO <- NO_NORMALIZADOS/ORIGENES_DISTINTOS*100
 
 
