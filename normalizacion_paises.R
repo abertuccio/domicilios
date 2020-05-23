@@ -1,37 +1,36 @@
 require("stringdist")
 
-paises_o <- read.csv("/home/andres/Documents/domicilios/extractos/distinct_paises.csv",stringsAsFactors = FALSE)
+FUENTE_ORIGEN <- "/home/andres/Documents/domicilios/extractos/distinct_paises.csv"
+COLUMNA_ORIGEN <- "PAIS"
 
-paises_o$pais_pre_norm <- tolower(paises_o$PAIS)
+o <- read.csv(FUENTE_ORIGEN,stringsAsFactors = FALSE)
 
-paises_o$pais_pre_norm <- gsub("[^a-záéíóúñ ]+", "", paises_o$pais_pre_norm, perl=TRUE)
+o$pre_norm <- tolower(o[[COLUMNA_ORIGEN]])
+
+o$pre_norm <- gsub("[^a-záéíóúñ ]+", "", o$pre_norm, perl=TRUE)
 
 #paises_n <- data.frame(descripcion = c("Argentina"), codigo_pais = c(1))
-paises_n <- data.frame(descripcion = c("Argentina","Armenia","Palestina","Argelia"), codigo_pais = c(1,2,3,4))
+n <- data.frame(nombre = c("Argentina","Armenia","Palestina","Argelia"), codigo = c(1,2,3,4))
 
-paises_n$pais_pre_norm <- tolower(paises_n$descripcion)
+n$pre_norm <- tolower(n$nombre)
 
-paises_n$pais_pre_norm <- gsub("[^a-záéíóúñ]+", "", paises_n$pais_pre_norm, perl=TRUE)
+n$pre_norm <- gsub("[^a-záéíóúñ]+", "", n$pre_norm, perl=TRUE)
 
-#paises_o$pais_norm_2 <- paises_n[amatch(paises_o$pais_pre_norm,paises_n$pais_pre_norm,maxDist=2),][,c("descripcion")]
-#paises_o$pais_norm_3 <- paises_n[amatch(paises_o$pais_pre_norm,paises_n$pais_pre_norm,maxDist=3),][,c("descripcion")]
-#paises_o$pais_norm_4 <- paises_n[amatch(paises_o$pais_pre_norm,paises_n$pais_pre_norm,maxDist=4),][,c("descripcion")]
-
-paises_o[,c("pais_norm_2","codigo_pais_2")] <- paises_n[amatch(paises_o$pais_pre_norm,paises_n$pais_pre_norm,maxDist=2),][,c("descripcion","codigo_pais")]
-paises_o[,c("pais_norm_3","codigo_pais_3")] <- paises_n[amatch(paises_o$pais_pre_norm,paises_n$pais_pre_norm,maxDist=3),][,c("descripcion","codigo_pais")]
-paises_o[,c("pais_norm_4","codigo_pais_4")] <- paises_n[amatch(paises_o$pais_pre_norm,paises_n$pais_pre_norm,maxDist=4),][,c("descripcion","codigo_pais")]
+o[,c("norm_2","codigo_2")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=2),][,c("nombre","codigo")]
+o[,c("norm_3","codigo_3")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=3),][,c("nombre","codigo")]
+o[,c("norm_4","codigo_4")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=4),][,c("nombre","codigo")]
 
 
 #DATOS PARA ANALIZAR SI DEJAMOS ALGO IMPORTANTE AFUERA
 #A MEDIDA QUE AUMENTA EL NUMERO SE ALEJA MAS DE LA NORMA PERO INCLUYE MAS VALORES
-excluidos_2 <- paises_o[is.na(paises_o$pais_norm_2),]
-excluidos_3 <- paises_o[is.na(paises_o$pais_norm_3),]
-excluidos_4 <- paises_o[is.na(paises_o$pais_norm_4),]
+excluidos_2 <- o[is.na(o$norm_2),]
+excluidos_3 <- o[is.na(o$norm_3),]
+excluidos_4 <- o[is.na(o$norm_4),]
 
 #DATOS PARA ANALIZAR CUAL ESCOJEMOS
-paises_o_test <- paises_o[!is.na(paises_o$pais_norm_4),c("PAIS","pais_norm_2","pais_norm_3","pais_norm_4")]
+o_test <- o[!is.na(o$norm_4),c(COLUMNA_ORIGEN,"norm_2","norm_3","norm_4")]
 
 #EN EL CASO TESTEADO DEJAMOS LOS VALORES NORM 2 NO VACIOS
-paises_o <- paises_o[!is.na(paises_o$pais_norm_2),c("PAIS","codigo_pais_2")] 
+o <- o[!is.na(o$norm_2),c(COLUMNA_ORIGEN,"codigo_2")] 
 
-colnames(paises_o) <- c("PAIS", "CODIGO")
+colnames(o) <- c(COLUMNA_ORIGEN, "CODIGO")
