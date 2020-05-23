@@ -1,5 +1,4 @@
 require("stringdist")
-require("RPostgreSQL")
 
 FUENTE_ORIGEN <- "/home/andres/Documents/domicilios/extractos/distinct_pais_provincia.csv"
 COLUMNA_ORIGEN <- "PROVINCIA"
