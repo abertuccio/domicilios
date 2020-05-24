@@ -2,6 +2,14 @@ require("RPostgreSQL")
 source("/home/andres/Documents/domicilios/normalizacion_general_function.R")
 con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
 
+if(dbExistsTable(con, "REPORTE_NORMALIZACION")){
+   dbRemoveTable(con,"REPORTE_NORMALIZACION")
+}
+
+if(dbExistsTable(con, "EXCLUIDOS_NORMALIZACION")){
+   dbRemoveTable(con,"EXCLUIDOS_NORMALIZACION")
+}
+
 FUENTE_ORIGEN_PAISES <- "/home/andres/Documents/domicilios/extractos/distinct_paises.csv"
 COLUMNA_ORIGEN_PAISES <- "PAIS"
 
@@ -12,7 +20,8 @@ norma_paises <- data.frame(nombre = c("Argentina","Armenia","Palestina","Argelia
 
 norma_provincias <- dbGetQuery(con, "select codigo, nombre from provincias p")
 
-provincias <- normalizacion(FUENTE_ORIGEN_PROVINCIAS,
+provincias <- normalizacion('1',
+                            FUENTE_ORIGEN_PROVINCIAS,
                             COLUMNA_ORIGEN_PROVINCIAS,
                             norma_provincias,
                             'ARGENTINA')
@@ -36,9 +45,10 @@ departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),COD
 
    norma_departamentos <- dbGetQuery(con, query)
 
-   departamentosN <- normalizacion(FUENTE_ORIGEN_DEPARTAMENTO,
-                                  COLUMNA_ORIGEN_DEPARTAMENTO,
-                                  norma_departamentos,
+   departamentosN <- normalizacion(row$CODIGO,
+                                   FUENTE_ORIGEN_DEPARTAMENTO,
+                                   COLUMNA_ORIGEN_DEPARTAMENTO,
+                                   norma_departamentos,
                                   "ARGENTINA",
                                   row$PROVINCIA)
    
@@ -88,7 +98,8 @@ departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),COD
 
     norma_asentamientos <- dbGetQuery(con, query)
 
-    asentamientosN <- normalizacion(FUENTE_ORIGEN_ASENTAMIENTO,
+    asentamientosN <- normalizacion(row$CODIGO,
+                                    FUENTE_ORIGEN_ASENTAMIENTO,
                                     COLUMNA_ORIGEN_ASENTAMIENTO,
                                     norma_asentamientos,
                                     "ARGENTINA",
@@ -108,6 +119,12 @@ departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),COD
 
  })
  
+ asentamientos <- asentamientos[,c(4,3,5,6,1,2)]
+ colnames(asentamientos)[6] <- "CODIGO_CIUDAD"
  
+ if(dbExistsTable(con, "CIUDADES_ASENTAMIENTOS")){
+     dbRemoveTable(con,"CIUDADES_ASENTAMIENTOS")
+ }
+ dbWriteTable(con, "CIUDADES_ASENTAMIENTOS", asentamientos, row.names=TRUE, append=FALSE)
  
 dbDisconnect(con)

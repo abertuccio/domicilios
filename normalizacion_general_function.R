@@ -1,6 +1,7 @@
 require("stringdist")
 
-normalizacion <- function(FUENTE_ORIGEN,
+normalizacion <- function(CODIGO_NIVEL,
+                          FUENTE_ORIGEN,
                           COLUMNA_ORIGEN,
                           DATA_FRAME_NORMA,
                           PAIS=NA,
@@ -9,16 +10,20 @@ normalizacion <- function(FUENTE_ORIGEN,
 
   o <- read.csv(FUENTE_ORIGEN,stringsAsFactors = FALSE)
   
-  
+  NIVEL <- "GENERAL"
+    
   if(!is.na(PAIS)){
   o <- o[o$PAIS == PAIS,]
+  NIVEL <- PAIS
   }
   if(!is.na(PROVINCIA)){
     o <- o[o$PROVINCIA == PROVINCIA,]
+    NIVEL <- PROVINCIA
   }
   
   if(!is.na(MUNICIPIO)){
     o <- o[o$MUNICIPIO == MUNICIPIO,]
+    NIVEL <- paste(PROVINCIA,MUNICIPIO)
   }
   
   
@@ -57,7 +62,22 @@ normalizacion <- function(FUENTE_ORIGEN,
   
   NORMALIZADOS <- nrow(o)
   NO_NORMALIZADOS <- ORIGENES_DISTINTOS - NORMALIZADOS
-  PORCENTAJE_NO_NORMALIZADO <- NO_NORMALIZADOS/ORIGENES_DISTINTOS*100
+  PORCENTAJE_NO_NORMALIZADO <- floor(NO_NORMALIZADOS*100/ORIGENES_DISTINTOS)
+  
+  reporte <- data.frame(NIVEL = c(NIVEL),
+                        CODIGO=c(CODIGO_NIVEL),
+                        TOTAL_ORIGENES_DISTINTOS=c(ORIGENES_DISTINTOS),
+                        TOTAL_NORMA_DISTINTOS=c(NORMA_DISTINTOS),
+                        TOTAL_NORMALIZADOS=c(NORMALIZADOS),
+                        PORCENTAJE_NO_NORMALIZADO=c(PORCENTAJE_NO_NORMALIZADO)) 
+  
+  if(nrow(excluidos_4)>0){
+  excluidos_4$UBICACION <- c(NIVEL)
+  excluidos_4$CODIGO <- c(CODIGO_NIVEL)
+  dbWriteTable(con, "EXCLUIDOS_NORMALIZACION", excluidos_4, row.names=TRUE, append=TRUE)
+  }
+  
+  dbWriteTable(con, "REPORTE_NORMALIZACION", reporte, row.names=TRUE, append=TRUE)
 
 return(o)
 
