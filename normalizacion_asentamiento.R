@@ -1,15 +1,18 @@
 require("stringdist")
 require("RPostgreSQL")
 
-FUENTE_ORIGEN <- "/home/andres/Documents/domicilios/extractos/distinct_pais_provincia_municipio.csv"
-COLUMNA_ORIGEN <- "MUNICIPIO"
-PROVINCIA <- "CIUDAD_DE_BUENOS_AIRES"
-CODIGO_PROVINCIA <- '02'
+FUENTE_ORIGEN <- "/home/andres/Documents/domicilios/extractos/distinct_pais_provincia_municipio_ciudad.csv"
+COLUMNA_ORIGEN <- "CIUDAD"
+PROVINCIA <- "BUENOS_AIRES"
+MUNICIPIO <- "MORóN"
+CODIGO_PROVINCIA <- '06'
+CODIGO_DEPARTAMENTO <- '06568'
 
 o <- read.csv(FUENTE_ORIGEN,stringsAsFactors = FALSE)
 
 o <- o[o$PAIS == "ARGENTINA",]
 o <- o[o$PROVINCIA == PROVINCIA,]
+o <- o[o$MUNICIPIO == MUNICIPIO,]
 ORIGENES_DISTINTOS = nrow(o)
 
 o$pre_norm <- tolower(o[[COLUMNA_ORIGEN]])
@@ -18,12 +21,11 @@ o$pre_norm <- gsub("[^a-záéíóúñ ]+", "", o$pre_norm, perl=TRUE)
 
 con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
 
-query <- paste("select d.codigo,
-               d.nombre
-               from departamentos d
-               inner join provincias p
-               on d.id_provincia = p.id_provincia
-               where p.codigo = '",CODIGO_PROVINCIA,"'", sep = "")
+query <- paste("select codigo_asentamiento as codigo,
+                nombre_geografico as nombre
+                from bahra b
+                where codigo_indec_provincia = '" ,CODIGO_PROVINCIA,"'",
+                "and codigo_indec_departamento = '",CODIGO_DEPARTAMENTO,"'", sep = "")
 
 n <- dbGetQuery(con, query)
 dbDisconnect(con)

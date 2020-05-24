@@ -5,10 +5,11 @@ normalizacion <- function(FUENTE_ORIGEN,
                           DATA_FRAME_NORMA,
                           PAIS=NA,
                           PROVINCIA=NA,
-                          DEPARTAMENTO=NA){
+                          MUNICIPIO=NA){
 
   o <- read.csv(FUENTE_ORIGEN,stringsAsFactors = FALSE)
-  #habria que excluirlo en una query
+  
+  
   if(!is.na(PAIS)){
   o <- o[o$PAIS == PAIS,]
   }
@@ -16,13 +17,16 @@ normalizacion <- function(FUENTE_ORIGEN,
     o <- o[o$PROVINCIA == PROVINCIA,]
   }
   
+  if(!is.na(MUNICIPIO)){
+    o <- o[o$MUNICIPIO == MUNICIPIO,]
+  }
+  
+  
   ORIGENES_DISTINTOS = nrow(o)
   
   o$pre_norm <- tolower(o[[COLUMNA_ORIGEN]])
   
   o$pre_norm <- gsub("[^a-záéíóúñ ]+", "", o$pre_norm, perl=TRUE)
-  
-  con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
   
   n <- DATA_FRAME_NORMA
   
