@@ -18,7 +18,14 @@ COLUMNA_ORIGEN_PROVINCIAS <- "PROVINCIA"
 
 norma_paises <- data.frame(nombre = c("Argentina","Armenia","Palestina","Argelia"), codigo = c(1,2,3,4))
 
-norma_provincias <- dbGetQuery(con, "select codigo, nombre from provincias p")
+norma_provincias <- dbGetQuery(con, "select codigo, 
+                                            nombre 
+                                            from provincias p
+                                      union
+                                      select codigo, 
+                                              sinonimo as nombre 
+                                              from rnpr_sinonimos 
+                                      where codigo in (select codigo from provincias p)")
 
 provincias <- normalizacion('1',
                             FUENTE_ORIGEN_PROVINCIAS,
@@ -41,7 +48,14 @@ departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),COD
                from departamentos d
                inner join provincias p
                on d.id_provincia = p.id_provincia
-               where p.codigo = '",row$CODIGO,"'", sep = "")
+               where p.codigo = '",row$CODIGO,"' 
+               union 
+               select codigo, sinonimo as nombre from rnpr_sinonimos
+               where codigo in (select d.codigo
+               from departamentos d
+               inner join provincias p
+               on d.id_provincia = p.id_provincia
+               where p.codigo = '",row$CODIGO,"')", sep = "")
 
    norma_departamentos <- dbGetQuery(con, query)
 
@@ -92,9 +106,17 @@ departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),COD
     query <- paste("select codigo_asentamiento as codigo,
                 nombre_geografico as nombre
                 from bahra b
-                where codigo_indec_provincia = '" ,row$CODIGO_PROVINCIA ,"'",
-                   " and codigo_indec_departamento = '",row$CODIGO,"'",
-                   " and codigo_asentamiento <> ''; ", sep = "")
+                where codigo_indec_provincia = '",row$CODIGO_PROVINCIA,
+                   "' and codigo_indec_departamento = '",row$CODIGO,
+                   "' and codigo_asentamiento <> '' 
+                   union 
+                   select codigo, sinonimo as nombre 
+                   from rnpr_sinonimos rs
+                   where codigo in (select codigo_asentamiento 
+                from bahra b
+                where codigo_indec_provincia = '",row$CODIGO_PROVINCIA,
+                   "' and codigo_indec_departamento = '",row$CODIGO,
+                   "' and codigo_asentamiento <> '')", sep = "")
 
     norma_asentamientos <- dbGetQuery(con, query)
 
@@ -125,6 +147,7 @@ departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),COD
  if(dbExistsTable(con, "rnpr_normalizacion")){
      dbRemoveTable(con,"rnpr_normalizacion")
  }
+ 
  dbWriteTable(con, "rnpr_normalizacion", asentamientos, row.names=TRUE, append=FALSE)
  
  print("----->  FIN ")

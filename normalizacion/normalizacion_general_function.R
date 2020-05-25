@@ -48,12 +48,15 @@ normalizacion <- function(CODIGO_NIVEL,
   
   #DATOS PARA ANALIZAR SI DEJAMOS ALGO IMPORTANTE AFUERA
   #A MEDIDA QUE AUMENTA EL NUMERO SE ALEJA MAS DE LA NORMA PERO INCLUYE MAS VALORES
+  
   excluidos_2 <- o[is.na(o$norm_2),c("pre_norm","norm_2")]
   excluidos_3 <- o[is.na(o$norm_3),c("pre_norm","norm_2","norm_3")]
-  excluidos_4 <- o[is.na(o$norm_4),c("pre_norm","norm_2","norm_3","norm_4")]
+  
+  excluidos_4 <- o[is.na(o$norm_4),c(COLUMNA_ORIGEN,"pre_norm")]
+  colnames(excluidos_4)[1] <- "valor_original"
   
   #DATOS PARA ANALIZAR CUAL ESCOJEMOS
-  o_test <- o[!is.na(o$norm_4),c(COLUMNA_ORIGEN,"norm_2","norm_3","norm_4")]
+  # o_test <- o[!is.na(o$norm_4),c(COLUMNA_ORIGEN,"norm_2","norm_3","norm_4")]
   
   #EN EL CASO TESTEADO DEJAMOS LOS VALORES NORM 2 NO VACIOS
   o <- o[!is.na(o$norm_2),c(COLUMNA_ORIGEN,"codigo_2")] 
@@ -71,7 +74,11 @@ normalizacion <- function(CODIGO_NIVEL,
                         TOTAL_NORMALIZADOS=c(NORMALIZADOS),
                         PORCENTAJE_NO_NORMALIZADO=c(PORCENTAJE_NO_NORMALIZADO)) 
   
+  #DE CADA UNA DE LAS FILAS DE EXCLUIDOS, HAY QUE BUSCAR CUANTOS SON
+  
   if(nrow(excluidos_4)>0){
+  excluidos_4$campo_original <- COLUMNA_ORIGEN
+  excluidos_4$cantidad <- 0
   excluidos_4$UBICACION <- c(NIVEL)
   excluidos_4$CODIGO <- c(CODIGO_NIVEL)
   dbWriteTable(con, "rnpr_excluidos_normalizacion", excluidos_4, row.names=TRUE, append=TRUE)
