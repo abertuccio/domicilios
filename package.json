@@ -1,0 +1,22 @@
+{
+  "name": "domicilios",
+  "version": "1.0.0",
+  "description": "",
+  "main": "nominatim_api.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abertuccio/domicilios.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/abertuccio/domicilios/issues"
+  },
+  "homepage": "https://github.com/abertuccio/domicilios#readme",
+  "dependencies": {
+    "pg-promise": "^10.5.6"
+  }
+}

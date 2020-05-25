@@ -1,13 +1,13 @@
 require("RPostgreSQL")
-source("/home/andres/Documents/domicilios/normalizacion_general_function.R")
+source("/home/andres/Documents/domicilios/normalizacion/normalizacion_general_function.R")
 con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
 
-if(dbExistsTable(con, "REPORTE_NORMALIZACION")){
-   dbRemoveTable(con,"REPORTE_NORMALIZACION")
+if(dbExistsTable(con, "rnpr_reporte_normalizacion")){
+   dbRemoveTable(con,"rnpr_reporte_normalizacion")
 }
 
-if(dbExistsTable(con, "EXCLUIDOS_NORMALIZACION")){
-   dbRemoveTable(con,"EXCLUIDOS_NORMALIZACION")
+if(dbExistsTable(con, "rnpr_excluidos_normalizacion")){
+   dbRemoveTable(con,"rnpr_excluidos_normalizacion")
 }
 
 FUENTE_ORIGEN_PAISES <- "/home/andres/Documents/domicilios/extractos/distinct_paises.csv"
@@ -122,9 +122,11 @@ departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),COD
  asentamientos <- asentamientos[,c(4,3,5,6,1,2)]
  colnames(asentamientos)[6] <- "CODIGO_CIUDAD"
  
- if(dbExistsTable(con, "CIUDADES_ASENTAMIENTOS")){
-     dbRemoveTable(con,"CIUDADES_ASENTAMIENTOS")
+ if(dbExistsTable(con, "rnpr_normalizacion")){
+     dbRemoveTable(con,"rnpr_normalizacion")
  }
- dbWriteTable(con, "CIUDADES_ASENTAMIENTOS", asentamientos, row.names=TRUE, append=FALSE)
+ dbWriteTable(con, "rnpr_normalizacion", asentamientos, row.names=TRUE, append=FALSE)
+ 
+ print("----->  FIN ")
  
 dbDisconnect(con)

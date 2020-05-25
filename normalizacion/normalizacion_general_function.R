@@ -74,10 +74,10 @@ normalizacion <- function(CODIGO_NIVEL,
   if(nrow(excluidos_4)>0){
   excluidos_4$UBICACION <- c(NIVEL)
   excluidos_4$CODIGO <- c(CODIGO_NIVEL)
-  dbWriteTable(con, "EXCLUIDOS_NORMALIZACION", excluidos_4, row.names=TRUE, append=TRUE)
+  dbWriteTable(con, "rnpr_excluidos_normalizacion", excluidos_4, row.names=TRUE, append=TRUE)
   }
   
-  dbWriteTable(con, "REPORTE_NORMALIZACION", reporte, row.names=TRUE, append=TRUE)
+  dbWriteTable(con, "rnpr_reporte_normalizacion", reporte, row.names=TRUE, append=TRUE)
 
 return(o)
 
