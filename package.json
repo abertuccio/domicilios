@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/abertuccio/domicilios#readme",
   "dependencies": {
-    "pg-promise": "^10.5.6"
+    "pg-promise": "^10.5.6",
+    "query-string": "^6.12.1"
   }
 }
