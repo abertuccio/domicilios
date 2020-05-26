@@ -1,5 +1,7 @@
 require("RPostgreSQL")
-source("/home/andres/Documents/domicilios/normalizacion/normalizacion_general_function.R")
+ruta <- getwd()
+source(paste(ruta,"/normalizacion/normalizacion_general_function.R",sep=""))
+
 con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
 
 if(dbExistsTable(con, "rnpr_reporte_normalizacion")){
@@ -10,10 +12,10 @@ if(dbExistsTable(con, "rnpr_excluidos_normalizacion")){
    dbRemoveTable(con,"rnpr_excluidos_normalizacion")
 }
 
-FUENTE_ORIGEN_PAISES <- "/home/andres/Documents/domicilios/extractos/distinct_paises.csv"
+FUENTE_ORIGEN_PAISES <- paste(ruta,"/extractos/distinct_paises.csv",sep="")
 COLUMNA_ORIGEN_PAISES <- "PAIS"
 
-FUENTE_ORIGEN_PROVINCIAS <- "/home/andres/Documents/domicilios/extractos/distinct_pais_provincia.csv"
+FUENTE_ORIGEN_PROVINCIAS <- paste(ruta,"/extractos/distinct_pais_provincia.csv",sep="")
 COLUMNA_ORIGEN_PROVINCIAS <- "PROVINCIA"
 
 norma_paises <- data.frame(nombre = c("Argentina","Armenia","Palestina","Argelia"), codigo = c(1,2,3,4))
@@ -39,8 +41,8 @@ departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),COD
 # provincias <- provincias[provincias$CODIGO == "06",]
 
  by(provincias, 1:nrow(provincias), function(row){
-    
-   FUENTE_ORIGEN_DEPARTAMENTO <- "/home/andres/Documents/domicilios/extractos/distinct_pais_provincia_municipio.csv"
+   
+   FUENTE_ORIGEN_DEPARTAMENTO <- paste(ruta,"/extractos/distinct_pais_provincia_municipio.csv",sep="")
    COLUMNA_ORIGEN_DEPARTAMENTO <- "MUNICIPIO"
 
    query <- paste("select d.codigo,
@@ -96,7 +98,7 @@ departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),COD
     actual <<- actual + 1
     print(paste("----->  PROCESADO: ",floor(actual*100/total_departamentos),"%"))
 
-    FUENTE_ORIGEN_ASENTAMIENTO <- "/home/andres/Documents/domicilios/extractos/distinct_pais_provincia_municipio_ciudad.csv"
+    FUENTE_ORIGEN_ASENTAMIENTO <- paste(ruta,"/extractos/distinct_pais_provincia_municipio_ciudad.csv",sep="")
     COLUMNA_ORIGEN_ASENTAMIENTO <- "CIUDAD"
     
     #OJO CON TIPO DE ENTIDAD!!!!!!

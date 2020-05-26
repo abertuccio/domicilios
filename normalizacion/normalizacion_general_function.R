@@ -51,8 +51,8 @@ normalizacion <- function(CODIGO_NIVEL,
   
   excluidos_2 <- o[is.na(o$norm_2),c("pre_norm","norm_2")]
   excluidos_3 <- o[is.na(o$norm_3),c("pre_norm","norm_2","norm_3")]
-  
   excluidos_4 <- o[is.na(o$norm_4),c(COLUMNA_ORIGEN,"pre_norm")]
+  
   colnames(excluidos_4)[1] <- "valor_original"
   
   #DATOS PARA ANALIZAR CUAL ESCOJEMOS
