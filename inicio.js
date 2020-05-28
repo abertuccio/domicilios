@@ -21,20 +21,51 @@ const db = pgp(cn);
     country:"Argentina",
     postalcode:null,
     polygon_geojson:1,
-    format:"json"
+    format:"json",
+    "accept-language":"es"
   }
   
-  const result  = await db.many("select * from provincias");
+  const provincias_n  = await db.many("select * from provincias where id_provincia in (1)");
 
-  result.forEach(async p=>{
+  provincias_n.forEach(async p=>{
 
-    direccion.county = p.nombre;
+    direccion.state = p.nombre;
 
     const res = await nominatim_api.get(direccion);
 
-    if("display_name" in res[0]){
-      console.log(res[0].display_name);
-    }
+    if(res.length && "display_name" in res[0]){
+       console.log("P_B: "+ p.nombre + "    -    P_N :"+res[0].display_name);
+
+       const departamentos_n  = await db.many("select * from departamentos where id_provincia = "+p.id_provincia);
+
+       departamentos_n.forEach(async d=>{
+        d.nombre = d.nombre.replace("\n","");
+        direccion.county = d.nombre.trim();
+
+        //console.log(direccion)
+
+        if(direccion.county.length){
+
+          const res2 = await nominatim_api.get(direccion);
+
+          if(res2.length && "display_name" in res2[0]){
+            console.log("D_B_P "+direccion.state+": "+ d.nombre + "    -    P_N_P "+direccion.state+":"+res2[0].display_name);
+          }
+          else{
+            "!!!!!!!!!!!!!!!!!!!!!!!! "+d.nombre+" no encontrada !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+          } 
+
+
+        }        
+        
+        
+
+       })
+
+     }
+     else{
+       "!!!!!!!!!!!!!!!!!!!!!!!! "+p.nombre+" no encontrada !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+     }
   
 
   })

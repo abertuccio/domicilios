@@ -9,20 +9,28 @@ async function get(direccion){
 
         let output = '';
 
-        http.get({
-            hostname: 'localhost',
+        http.get({            
+            hostname: '127.0.0.1',
             port: 7070,
             path: '/search.php?'+parsed
           }, (res) => {
-
             res.on('data', (chunk) => {
                 output += chunk;
               }); 
     
             res.on('end', () => {
-                let obj = JSON.parse(output);
+              let obj ={}
+              try {
+                obj = JSON.parse(output);
+            } catch(e) {
+              obj ={}
+            }                
                 resolve(obj); 
               });
+
+              res.on('error',(e)=>{
+console.log(e);
+              })
     
           });
 
