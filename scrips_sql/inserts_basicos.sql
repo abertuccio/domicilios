@@ -17,3 +17,26 @@ on p.codigo = b.codigo_indec_provincia
 where b.gid not in (14705,14753)
 order by p.id_provincia, codigo ASC; 
 
+select distinct 
+
+
+
+select * from nominatim.
+
+select * from provincias
+
+select COUNT(*) , 'normalizados' as tipo
+from rnpr_normalizacion rn
+union
+select COUNT(*) , 'excluidos' as tipo
+from rnpr_excluidos_normalizacion ren;
+
+
+select count(*) from rnpr_excluidos_normalizacion ren
+
+select ST_SetSRID(ST_MakePoint(cast (b.longitud_grado_decimal as float),cast(b.latitud_grado_decimal as float)),4326) 
+from bahra b 
+where codigo_indec_provincia = '06';
+
+
+

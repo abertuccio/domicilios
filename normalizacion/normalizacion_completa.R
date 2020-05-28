@@ -5,7 +5,7 @@ source(paste(ruta,"/normalizacion/normalizacion_general_function.R",sep=""))
 con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
 
 if(dbExistsTable(con, "rnpr_reporte_normalizacion")){
-   dbRemoveTable(con,"rnpr_reporte_normalizacion")
+  dbRemoveTable(con,"rnpr_reporte_normalizacion")
 }
 
 if(dbExistsTable(con, "rnpr_excluidos_normalizacion")){
@@ -20,13 +20,14 @@ COLUMNA_ORIGEN_PROVINCIAS <- "PROVINCIA"
 
 norma_paises <- data.frame(nombre = c("Argentina","Armenia","Palestina","Argelia"), codigo = c(1,2,3,4))
 
-norma_provincias <- dbGetQuery(con, "select codigo, 
-                                            nombre 
+norma_provincias <- dbGetQuery(con, "select p.codigo as codigo, 
+                                            p.nombre as nombre 
                                             from provincias p
+                                            where p.nombre <> ''
                                       union
-                                      select codigo, 
-                                              sinonimo as nombre 
-                                              from rnpr_sinonimos 
+                                      select s.codigo as codigo, 
+                                              s.sinonimo as nombre 
+                                              from rnpr_sinonimos s 
                                       where codigo in (select codigo from provincias p)")
 
 provincias <- normalizacion('1',
@@ -51,6 +52,7 @@ departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),COD
                inner join provincias p
                on d.id_provincia = p.id_provincia
                where p.codigo = '",row$CODIGO,"' 
+               and d.nombre <> ''
                union 
                select codigo, sinonimo as nombre from rnpr_sinonimos
                where codigo in (select d.codigo
