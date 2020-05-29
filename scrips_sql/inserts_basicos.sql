@@ -39,4 +39,7 @@ from bahra b
 where codigo_indec_provincia = '06';
 
 
+select distinct b.codigo_indec_departamento, b.nombre_departamento from bahra b where b.codigo_indec_provincia = '06'
+
+
 

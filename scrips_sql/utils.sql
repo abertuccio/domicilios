@@ -83,6 +83,27 @@ ST_SetSRID(ST_MakePoint(cast (b.longitud_grado_decimal as float),cast(b.latitud_
 from rnpr_excluidos_normalizacion n 
 inner join bahra b
 on b.codigo_indec_departamento = n.codigo         
+
+select 
+	(select p.prefijo_departamento_municipio 
+	from prefijos p 
+	where p.id_provincia = 2)||' '||nombre as nombre,
+	codigo 
+	from departamentos d 
+	where id_provincia = 2
+union 
+select 
+	(select p.prefijo_departamento_municipio 
+	from prefijos p 
+	where p.id_provincia = 2)||' '||rs.sinonimo as nombre,
+	codigo 
+	from rnpr_sinonimos rs
+where rs.codigo 
+in (select 
+	codigo 
+	from departamentos d 
+	where id_provincia =2)
+
                
 
 
