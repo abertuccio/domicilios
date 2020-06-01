@@ -9,3 +9,5 @@ if(dbExistsTable(con, "barha_test")){
 }
 
 dbWriteTable(con, "barha_test", barha, row.names=TRUE)
+
+dbDisconnect(con)
