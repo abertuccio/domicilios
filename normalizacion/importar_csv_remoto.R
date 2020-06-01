@@ -1,4 +1,4 @@
-require("RPostgreSQL")
+  require("RPostgreSQL")
 
 con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
 
