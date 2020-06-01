@@ -1,6 +1,6 @@
 require("stringdist")
-valores1 <- c("CIUDAD_DE_BUENOS_AIRES ")
-valores2 <- c("Ciudad de Buenos Aires")
+valores1 <- c("emiratosarabesunidos")
+valores2 <- c("emiratosarabesunidoslos")
 
 valores1 <- tolower(valores1)
 valores2 <- tolower(valores2)
@@ -21,4 +21,4 @@ valores2 <- gsub("ó", "o", valores2, perl=TRUE)
 valores2 <- gsub("ú", "u", valores2, perl=TRUE)
 
 
-amatch(valores1, valores2, maxDist=2)
+amatch(valores1, valores2, maxDist=7)

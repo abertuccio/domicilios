@@ -20,6 +20,8 @@ COLUMNA_ORIGEN_PROVINCIAS <- "PROVINCIA"
 
 norma_paises <- data.frame(nombre = c("Argentina","Armenia","Palestina","Argelia"), codigo = c(1,2,3,4))
 
+# norma_paises <- dbGetQuery(con, "select id_pais, nombre from paises")
+
 norma_provincias <- dbGetQuery(con, "select p.codigo as codigo, 
                                             p.nombre as nombre 
                                             from provincias p
