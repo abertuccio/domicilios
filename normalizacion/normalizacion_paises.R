@@ -1,36 +1,67 @@
+require("RPostgreSQL")
 require("stringdist")
 
-FUENTE_ORIGEN <- "/home/andres/Documents/domicilios/extractos/distinct_paises.csv"
-COLUMNA_ORIGEN <- "PAIS"
+con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
 
-o <- read.csv(FUENTE_ORIGEN,stringsAsFactors = FALSE)
+if(dbExistsTable(con, "rnpr_paises_excluidos")){
+  dbRemoveTable(con,"rnpr_paises_excluidos")
+}
 
-o$pre_norm <- tolower(o[[COLUMNA_ORIGEN]])
+if(dbExistsTable(con, "rnpr_paises_normalizados")){
+  dbRemoveTable(con,"rnpr_paises_normalizados")
+}
 
-o$pre_norm <- gsub("[^a-záéíóúñ ]+", "", o$pre_norm, perl=TRUE)
+dbGetQuery(con, "update rnpr_distincts rd set id_pais = null")
 
-#paises_n <- data.frame(descripcion = c("Argentina"), codigo_pais = c(1))
-n <- data.frame(nombre = c("Argentina","Armenia","Palestina","Argelia"), codigo = c(1,2,3,4))
+o <- dbGetQuery(con, "select distinct pais as nombre from rnpr_distincts")
+o$p_norm <- trimws(o$nombre)
+o <- o[o$p_norm != '',]
 
-n$pre_norm <- tolower(n$nombre)
+n <- dbGetQuery(con, "select id_pais as id,
+                                  nombre
+                                  from paises p
+                                  union
+                                  select sp.id_pais as id,
+                                  sp.sinonimo as nombre
+                                  from sinonimos_paises sp")
 
-n$pre_norm <- gsub("[^a-záéíóúñ]+", "", n$pre_norm, perl=TRUE)
+o$p_norm <- tolower(o$nombre)
+o$p_norm <- gsub("[^a-záéíóúñ0-9]+", "", o$p_norm, perl=TRUE)
+o$p_norm <- gsub("á", "a", o$p_norm, perl=TRUE)
+o$p_norm <- gsub("é", "e", o$p_norm, perl=TRUE)
+o$p_norm <- gsub("í", "i", o$p_norm, perl=TRUE)
+o$p_norm <- gsub("ó", "o", o$p_norm, perl=TRUE)
+o$p_norm <- gsub("ú", "u", o$p_norm, perl=TRUE)
+o <- o[o$p_norm != "sininformar",]
 
-o[,c("norm_2","codigo_2")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=2),][,c("nombre","codigo")]
-o[,c("norm_3","codigo_3")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=3),][,c("nombre","codigo")]
-o[,c("norm_4","codigo_4")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=4),][,c("nombre","codigo")]
+n$p_norm <- tolower(n$nombre)
+n$p_norm <- gsub("[^a-záéíóúñ0-9]+", "", n$p_norm, perl=TRUE)
+n$p_norm <- gsub("á", "a", n$p_norm, perl=TRUE)
+n$p_norm <- gsub("é", "e", n$p_norm, perl=TRUE)
+n$p_norm <- gsub("í", "i", n$p_norm, perl=TRUE)
+n$p_norm <- gsub("ó", "o", n$p_norm, perl=TRUE)
+n$p_norm <- gsub("ú", "u", n$p_norm, perl=TRUE)
+
+o[,c("norm_2","codigo_2")] <- n[amatch(o$p_norm, n$p_norm, maxDist=2),][,c("nombre","id")]
+o[,c("norm_max","codigo_max")] <- n[amatch(o$p_norm, n$p_norm, maxDist=7),][,c("nombre","id")]
+
+excluidos <- data.frame(o[is.na(o$norm_2),c("nombre","norm_max")])
+
+dbWriteTable(con, "rnpr_paises_excluidos", excluidos, row.names=TRUE, append=FALSE)
+
+o$id_pais <- o[,"codigo_2"]
+o$pais <- o[,"nombre"]
+o <-o[,c("id_pais","pais")]
+
+dbWriteTable(con, "rnpr_paises_normalizados", o, row.names=TRUE, append=FALSE)
 
 
-#DATOS PARA ANALIZAR SI DEJAMOS ALGO IMPORTANTE AFUERA
-#A MEDIDA QUE AUMENTA EL NUMERO SE ALEJA MAS DE LA NORMA PERO INCLUYE MAS VALORES
-excluidos_2 <- o[is.na(o$norm_2),]
-excluidos_3 <- o[is.na(o$norm_3),]
-excluidos_4 <- o[is.na(o$norm_4),]
+dbGetQuery(con, "UPDATE rnpr_distincts rd
+                  SET id_pais = o.id_pais
+                  FROM rnpr_paises_normalizados o
+                  WHERE rd.pais = o.pais")
 
-#DATOS PARA ANALIZAR CUAL ESCOJEMOS
-o_test <- o[!is.na(o$norm_4),c(COLUMNA_ORIGEN,"norm_2","norm_3","norm_4")]
+dbRemoveTable(con,"rnpr_paises_normalizados")
 
-#EN EL CASO TESTEADO DEJAMOS LOS VALORES NORM 2 NO VACIOS
-o <- o[!is.na(o$norm_2),c(COLUMNA_ORIGEN,"codigo_2")] 
 
-colnames(o) <- c(COLUMNA_ORIGEN, "CODIGO")
+dbDisconnect(con)

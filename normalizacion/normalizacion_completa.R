@@ -1,161 +1,162 @@
 require("RPostgreSQL")
-ruta <- getwd()
-source(paste(ruta,"/normalizacion/normalizacion_general_function.R",sep=""))
+require("here")
 
-con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
+source(here("normalizacion_general_function.R"))
+
+con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
 
 if(dbExistsTable(con, "rnpr_reporte_normalizacion")){
-  dbRemoveTable(con,"rnpr_reporte_normalizacion")
+   dbRemoveTable(con, "rnpr_reporte_normalizacion")
 }
 
-if(dbExistsTable(con, "rnpr_excluidos_normalizacion")){
-   dbRemoveTable(con,"rnpr_excluidos_normalizacion")
+if(dbExistsTable(con, "rnpr_departamentos_inexistentes_en_origen")){
+   dbRemoveTable(con, "rnpr_departamentos_inexistentes_en_origen")
 }
 
-FUENTE_ORIGEN_PAISES <- paste(ruta,"/extractos/distinct_paises.csv",sep="")
-COLUMNA_ORIGEN_PAISES <- "PAIS"
+if(dbExistsTable(con, "rnpr_departamentos_normalizados")){
+   dbRemoveTable(con, "rnpr_departamentos_normalizados")
+}
 
-FUENTE_ORIGEN_PROVINCIAS <- paste(ruta,"/extractos/distinct_pais_provincia.csv",sep="")
-COLUMNA_ORIGEN_PROVINCIAS <- "PROVINCIA"
+if(dbExistsTable(con, "rnpr_asentamientos_normalizados")){
+   dbRemoveTable(con, "rnpr_asentamientos_normalizados")
+}
 
-norma_paises <- data.frame(nombre = c("Argentina","Armenia","Palestina","Argelia"), codigo = c(1,2,3,4))
+if(dbExistsTable(con, "rnpr_departamentos_excluidos")){
+      dbRemoveTable(con,"rnpr_departamentos_excluidos")
+}
 
-# norma_paises <- dbGetQuery(con, "select id_pais, nombre from paises")
+if(dbExistsTable(con, "rnpr_asentamientos_excluidos")){
+   dbRemoveTable(con,"rnpr_asentamientos_excluidos")
+}
 
-norma_provincias <- dbGetQuery(con, "select p.codigo as codigo, 
-                                            p.nombre as nombre 
-                                            from provincias p
-                                            where p.nombre <> ''
-                                      union
-                                      select s.codigo as codigo, 
-                                              s.sinonimo as nombre 
-                                              from rnpr_sinonimos s 
-                                      where codigo in (select codigo from provincias p)")
+norma_provincias <- dbGetQuery(con, "select id_provincia,
+                                     nombre
+                                      from provincias p 
+                                      where id_pais = 12;")
 
-provincias <- normalizacion('1',
-                            FUENTE_ORIGEN_PROVINCIAS,
-                            COLUMNA_ORIGEN_PROVINCIAS,
-                            norma_provincias,
-                            'ARGENTINA')
+dbGetQuery(con, "update rnpr_distincts rd set id_departamento = null where id_pais = 12;")
 
-departamentos <- data.frame(CODIGO_PROVINCIA=c(),PROVINCIA=c(),MUNICIPIO=c(),CODIGO=c())
-
-#LIMITAR CASOS PARA TESTEAR
-# provincias <- provincias[provincias$CODIGO == "06",]
-
- by(provincias, 1:nrow(provincias), function(row){
+ by(norma_provincias, 1:nrow(norma_provincias), function(row){
+    
+    print(paste("---> Buscando provincia: ",row$nombre))
+    
+   origen_departamentos <- dbGetQuery(con, paste("select distinct municipio as nombre
+                                            from rnpr_distincts rd
+                                            where id_pais = 12
+                                           and id_provincia = ",row$id_provincia))
    
-   FUENTE_ORIGEN_DEPARTAMENTO <- paste(ruta,"/extractos/distinct_pais_provincia_municipio.csv",sep="")
-   COLUMNA_ORIGEN_DEPARTAMENTO <- "MUNICIPIO"
-
-   query <- paste("select d.codigo,
-               d.nombre
-               from departamentos d
-               inner join provincias p
-               on d.id_provincia = p.id_provincia
-               where p.codigo = '",row$CODIGO,"' 
-               and d.nombre <> ''
-               union 
-               select codigo, sinonimo as nombre from rnpr_sinonimos
-               where codigo in (select d.codigo
-               from departamentos d
-               inner join provincias p
-               on d.id_provincia = p.id_provincia
-               where p.codigo = '",row$CODIGO,"')", sep = "")
-
-   norma_departamentos <- dbGetQuery(con, query)
-
-   departamentosN <- normalizacion(row$CODIGO,
-                                   FUENTE_ORIGEN_DEPARTAMENTO,
-                                   COLUMNA_ORIGEN_DEPARTAMENTO,
-                                   norma_departamentos,
-                                  "ARGENTINA",
-                                  row$PROVINCIA)
+   norma_departamentos <- dbGetQuery(con, paste("select id_departamento as id, 
+                                            		nombre 
+                                            		from departamentos d 
+                                            		where id_provincia = ",row$id_provincia,
+                                            		" union 
+                                                select id_departamento as id,
+                                            		sinonimo as nombre
+                                            		from sinonimos_departamentos sd 
+                                            		where id_departamento 
+                                            		in (select id_departamento
+                                            		from departamentos d 
+                                            		where id_provincia = ",row$id_provincia,");"))
    
-   if(nrow(departamentosN)!=0){
+   departamentos <- normalizacion(o = origen_departamentos,
+                                   n = norma_departamentos,
+                                   nivel = "departamentos",
+                                   id_padre = row$id_provincia)
+   
+   dbWriteTable(con, "rnpr_departamentos_normalizados", departamentos, row.names=TRUE, append=FALSE)
+   
+   
+   print(paste("---> Actualizando departamentos de: ",row$nombre))
+   
+   dbGetQuery(con, paste("UPDATE rnpr_distincts rd
+                  SET id_departamento = n.id
+                  FROM rnpr_departamentos_normalizados n
+                  WHERE rd.municipio = n.nombre
+                  AND rd.id_pais = 12
+                  AND rd.id_provincia = ",row$id_provincia))
+   
+   dbRemoveTable(con, "rnpr_departamentos_normalizados")
+   
+   print("--------------------------------------------- ")
+   print(paste("--- Finalizado departamentos de provincia de ",row$nombre))
+   print("--------------------------------------------- ")
+   print("--------------------------------------------- ")
+   print(paste("--- Inicio asentamientos de provincia de ",row$nombre))
+   print("--------------------------------------------- ")
+   
+   dbGetQuery(con, "update rnpr_distincts rd set id_asentamiento = null where id_pais = 12;")
+   
+   by(norma_departamentos, 1:nrow(norma_departamentos), function(departamento){
       
-      departamentosN$CODIGO_PROVINCIA <- row$CODIGO
-      departamentosN$PROVINCIA <- row$PROVINCIA
-   
-      departamentos <<- rbind(departamentos, departamentosN)
+   print(paste("--- Buscando asentamientos de departamento: ",departamento$nombre,". Provincia de ",row$nombre," id_provincia:",row$id_provincia))
+      
+      origen_asentamientos <- dbGetQuery(con, paste("select ciudad as nombre
+                                                    from rnpr_distincts rd 
+                                                    where id_departamento = ",departamento$id))
+      
+   print(paste("--- --- Asentamientos de departamento: ",departamento$nombre," ORIGEN --> ",nrow(origen_asentamientos)))   
+      
+      norma_asentamientos <- dbGetQuery(con, paste("select id_asentamiento as id, 
+                                                         nombre 
+                                                         from asentamientos a 
+                                                         where id_departamento = ",departamento$id,
+                                                         "union
+                                                         select id_asentamiento as id,
+                                                         sinonimo as nombre 
+                                                         from sinonimos_asentamientos sa 
+                                                         where id_asentamiento 
+                                                         in (select id_asentamiento 
+                                                         from asentamientos a 
+                                                         where id_departamento = ",departamento$id,")"))
+      
+   print(paste("--- --- Asentamientos de departamento: ",departamento$nombre," NORMA --> ",nrow(norma_asentamientos)))   
+      
+     if(nrow(origen_asentamientos)<1){
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(paste("NO HAY REGISTROS ORIGEN EN ",departamento$nombre," Provincia de ",row$nombre," id_provincia:",row$id_provincia))
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        
+        dep_inex <- data.frame(id_provincia = c(row$id_provincia), id_departamento = c(departamento$id),nombre = c(departamento$nombre))
+        
+        dbWriteTable(con, "rnpr_departamentos_inexistentes_en_origen", dep_inex, row.names=TRUE, append=TRUE)
+        
+     }
+   else{
+      
+      asentamientos <- normalizacion(o = origen_asentamientos,
+                                     n = norma_asentamientos,
+                                     nivel = "asentamientos",
+                                     id_padre = departamento$id)
+      
+      dbWriteTable(con, "rnpr_asentamientos_normalizados", asentamientos, row.names=TRUE, append=FALSE)
+      
+      
+      dbGetQuery(con, paste("UPDATE rnpr_distincts rd
+                  SET id_asentamiento = n.id
+                  FROM rnpr_asentamientos_normalizados n
+                  WHERE rd.ciudad = n.nombre
+                  AND rd.id_pais = 12
+                  AND rd.id_provincia = ",row$id_provincia,
+                            "AND rd.id_departamento = ",departamento$id))
+      
+      dbRemoveTable(con, "rnpr_asentamientos_normalizados")
       
    }
-
- })
-
- asentamientos <- data.frame(PROVINCIA=c(),
-                             CODIGO_PROVINCIA=c(),
-                             MUNICIPIO=c(),
-                             CODIGO_MUNICIPIO=c(),
-                             ASENTAMIENTO=c(),
-                             CODIGO_ASENTAMIENTO=c()
-                             )
- 
- #NO ELIMINAR LIMITAR CASOS PARA TESTEAR
- # departamentos <- departamentos[departamentos$CODIGO == "06568",]
- 
- total_departamentos <- nrow(departamentos)
- actual <- 0
- 
- by(departamentos, 1:nrow(departamentos), function(row){
-    
-    actual <<- actual + 1
-    print(paste("----->  PROCESADO: ",floor(actual*100/total_departamentos),"%"))
-
-    FUENTE_ORIGEN_ASENTAMIENTO <- paste(ruta,"/extractos/distinct_pais_provincia_municipio_ciudad.csv",sep="")
-    COLUMNA_ORIGEN_ASENTAMIENTO <- "CIUDAD"
-    
-    #OJO CON TIPO DE ENTIDAD!!!!!!
-    #SE REPITEN PORQUE SIGNIFICAN COSAS DISTINTAS
-    #VER MORON
-    #A VECES EL CODIGO ASENTAMIENTO ESTA VACIO
-    query <- paste("select codigo_asentamiento as codigo,
-                nombre_geografico as nombre
-                from bahra b
-                where codigo_indec_provincia = '",row$CODIGO_PROVINCIA,
-                   "' and codigo_indec_departamento = '",row$CODIGO,
-                   "' and codigo_asentamiento <> '' 
-                   union 
-                   select codigo, sinonimo as nombre 
-                   from rnpr_sinonimos rs
-                   where codigo in (select codigo_asentamiento 
-                from bahra b
-                where codigo_indec_provincia = '",row$CODIGO_PROVINCIA,
-                   "' and codigo_indec_departamento = '",row$CODIGO,
-                   "' and codigo_asentamiento <> '')", sep = "")
-
-    norma_asentamientos <- dbGetQuery(con, query)
-
-    asentamientosN <- normalizacion(row$CODIGO,
-                                    FUENTE_ORIGEN_ASENTAMIENTO,
-                                    COLUMNA_ORIGEN_ASENTAMIENTO,
-                                    norma_asentamientos,
-                                    "ARGENTINA",
-                                    row$PROVINCIA,
-                                    row$MUNICIPIO)
-
-    if(nrow(asentamientosN)!=0){
-
-       asentamientosN$CODIGO_PROVINCIA <- row$CODIGO_PROVINCIA
-       asentamientosN$PROVINCIA <- row$PROVINCIA
-       asentamientosN$MUNICIPIO <- row$MUNICIPIO
-       asentamientosN$CODIGO_MUNICIPIO <- row$CODIGO
-
-       asentamientos <<- rbind(asentamientos, asentamientosN)
-
-    }
+   
+   
+      
+      
+   })
+   
+   print("--------------------------------------------- ")
+   print(paste("--- Finalizamos asentamientos de provincia de ",row$nombre))
+   print("--------------------------------------------- ")   
 
  })
  
- asentamientos <- asentamientos[,c(4,3,5,6,1,2)]
- colnames(asentamientos)[6] <- "CODIGO_CIUDAD"
  
- if(dbExistsTable(con, "rnpr_normalizacion")){
-     dbRemoveTable(con,"rnpr_normalizacion")
- }
- 
- dbWriteTable(con, "rnpr_normalizacion", asentamientos, row.names=TRUE, append=FALSE)
- 
- print("----->  FIN ")
+ print("--------------------------------------------- ")
+ print("------------------ FIN ----------------------")
+ print("--------------------------------------------- ") 
  
 dbDisconnect(con)

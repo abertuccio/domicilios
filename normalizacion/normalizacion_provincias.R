@@ -1,48 +1,69 @@
+require("RPostgreSQL")
 require("stringdist")
 
-FUENTE_ORIGEN <- "/home/andres/Documents/domicilios/extractos/distinct_pais_provincia.csv"
-COLUMNA_ORIGEN <- "PROVINCIA"
+con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
 
-o <- read.csv(FUENTE_ORIGEN,stringsAsFactors = FALSE)
-#habria que excluirlo en una query
-o <- o[o$PAIS == "ARGENTINA",]
-ORIGENES_DISTINTOS = nrow(o)
+if(dbExistsTable(con, "rnpr_provincias_excluidas")){
+  dbRemoveTable(con,"rnpr_provincias_excluidas")
+}
 
-o$pre_norm <- tolower(o[[COLUMNA_ORIGEN]])
+if(dbExistsTable(con, "rnpr_provincias_normalizadas")){
+  dbRemoveTable(con,"rnpr_provincias_normalizadas")
+}
 
-o$pre_norm <- gsub("[^a-záéíóúñ ]+", "", o$pre_norm, perl=TRUE)
+dbGetQuery(con, "update rnpr_distincts rd set id_provincia = null where id_pais = 12")
 
-con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
+o <- dbGetQuery(con, "select distinct provincia as nombre from rnpr_distincts where id_pais = 12")
 
-n <- dbGetQuery(con, "select codigo, nombre from provincias p")
+o$p_norm <- trimws(o$nombre)
+o <- o[o$p_norm != '',]
+
+n <- dbGetQuery(con, "select id_provincia as id,
+                              nombre
+                              from provincias p
+                              union 
+                              select sp.id_provincia as id, 
+                              sp.sinonimo as nombre 
+                              from sinonimos_provincias sp")
+
+o$p_norm <- tolower(o$nombre)
+o$p_norm <- gsub("[^a-záéíóúñ0-9]+", "", o$p_norm, perl=TRUE)
+o$p_norm <- gsub("á", "a", o$p_norm, perl=TRUE)
+o$p_norm <- gsub("é", "e", o$p_norm, perl=TRUE)
+o$p_norm <- gsub("í", "i", o$p_norm, perl=TRUE)
+o$p_norm <- gsub("ó", "o", o$p_norm, perl=TRUE)
+o$p_norm <- gsub("ú", "u", o$p_norm, perl=TRUE)
+o <- o[o$p_norm != "sininformar",]
+
+n$p_norm <- tolower(n$nombre)
+n$p_norm <- gsub("[^a-záéíóúñ0-9]+", "", n$p_norm, perl=TRUE)
+n$p_norm <- gsub("á", "a", n$p_norm, perl=TRUE)
+n$p_norm <- gsub("é", "e", n$p_norm, perl=TRUE)
+n$p_norm <- gsub("í", "i", n$p_norm, perl=TRUE)
+n$p_norm <- gsub("ó", "o", n$p_norm, perl=TRUE)
+n$p_norm <- gsub("ú", "u", n$p_norm, perl=TRUE)
+
+o[,c("norm_2","codigo_2")] <- n[amatch(o$p_norm, n$p_norm, maxDist=2),][,c("nombre","id")]
+o[,c("norm_max","codigo_max")] <- n[amatch(o$p_norm, n$p_norm, maxDist=7),][,c("nombre","id")]
+
+excluidos <- data.frame(o[is.na(o$norm_2),c("nombre","norm_max")])
+
+dbWriteTable(con, "rnpr_provincias_excluidas", excluidos, row.names=TRUE, append=FALSE)
+
+o$id_provincia <- o[,"codigo_2"]
+o$provincia <- o[,"nombre"]
+o <-o[,c("id_provincia","provincia")]
+
+dbWriteTable(con, "rnpr_provincias_normalizadas", o, row.names=TRUE, append=FALSE)
+
+
+dbGetQuery(con, "UPDATE rnpr_distincts rd
+                  SET id_provincia = o.id_provincia
+                  FROM rnpr_provincias_normalizadas o
+                  WHERE rd.provincia = o.provincia
+                  AND rd.id_pais = 12")
+
+dbRemoveTable(con,"rnpr_paises_normalizados")
+
 
 dbDisconnect(con)
-
-n$pre_norm <- tolower(n$nombre)
-
-n$pre_norm <- gsub("[^a-záéíóúñ]+", "", n$pre_norm, perl=TRUE)
-
-o[,c("norm_2","codigo_2")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=2),][,c("nombre","codigo")]
-o[,c("norm_3","codigo_3")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=3),][,c("nombre","codigo")]
-o[,c("norm_4","codigo_4")] <- n[amatch(o$pre_norm, n$pre_norm,maxDist=4),][,c("nombre","codigo")]
-
-
-#DATOS PARA ANALIZAR SI DEJAMOS ALGO IMPORTANTE AFUERA
-#A MEDIDA QUE AUMENTA EL NUMERO SE ALEJA MAS DE LA NORMA PERO INCLUYE MAS VALORES
-excluidos_2 <- o[is.na(o$norm_2),]
-excluidos_3 <- o[is.na(o$norm_3),]
-excluidos_4 <- o[is.na(o$norm_4),]
-
-#DATOS PARA ANALIZAR CUAL ESCOJEMOS
-o_test <- o[!is.na(o$norm_4),c(COLUMNA_ORIGEN,"norm_2","norm_3","norm_4")]
-
-#EN EL CASO TESTEADO DEJAMOS LOS VALORES NORM 2 NO VACIOS
-o <- o[!is.na(o$norm_2),c(COLUMNA_ORIGEN,"codigo_2")] 
-
-colnames(o) <- c(COLUMNA_ORIGEN, "CODIGO")
-
-NORMALIZADOS <- nrow(o)
-NO_NORMALIZADOS <- ORIGENES_DISTINTOS - NORMALIZADOS
-PORCENTAJE_NO_NORMALIZADO <- NO_NORMALIZADOS/ORIGENES_DISTINTOS*100
-
-
