@@ -24,7 +24,7 @@ const direccion = {
 ;(async () => {
     const client = await pool.connect()
     try {
-      const prov_norm = await client.query('select * from provincias where id_provincia = 13');
+      const prov_norm = await client.query('select * from provincias where id_provincia = 2');
       //const prov_norm = await client.query('select * from provincias');
       
       prov_norm.rows.forEach(async p => {
@@ -51,23 +51,25 @@ const direccion = {
                                                 where id_departamento 
                                                 in (select d.id_departamento from departamentos d 
                                                 where d.id_provincia = $1)) as nom
-                                                where p.id_provincia = $1 `,[13]);
+                                                where p.id_provincia = $1 `,[2]);
 
             dep_norm.rows.forEach(async (d)=>{
 
                 d.nombre = d.nombre.replace("\n","");
                 direccion.county = d.nombre;
 
+                //console.log(direccion)
+
                 const dep_geo = await nominatim_api.get(direccion);
 
                 if(dep_geo.length && "display_name" in dep_geo[0]){
-/* 
-                  console.log(dep_geo[0].lat)
-                  console.log(dep_geo[0].lon) 
-                  console.log(dep_geo[0].osm_id) 
-                  console.log(dep_geo[0].display_name) */
 
-                  const values = [dep_geo[0].lat,
+                  //console.log(dep_geo[0].lat)
+                  //console.log(dep_geo[0].lon) 
+                  console.log(dep_geo[0].osm_id) 
+                  //console.log(dep_geo[0].display_name)
+
+                 /*  const values = [dep_geo[0].lat,
                                   dep_geo[0].lon,
                                   dep_geo[0].osm_id,
                                   d.id_departamento];
@@ -78,7 +80,7 @@ const direccion = {
                                                         relation = $3,
                                                         fuente_ubicacion = 'NOMINATIM',
                                                         f_actualizacion = now()
-                                                        where id_departamento = $4`,values);
+                                                        where id_departamento = $4`,values); */
 
                 }
                 else{

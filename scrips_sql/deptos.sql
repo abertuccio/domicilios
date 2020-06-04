@@ -5,11 +5,11 @@ select id_departamento, (case
 			from prefijos p 
 CROSS JOIN
 (select d.id_departamento, d.nombre from departamentos d 
-where d.id_provincia = 2
+where d.id_provincia = 13
 union 
 select sd.id_departamento, sd.sinonimo as nombre 
 from sinonimos_departamentos sd
 where id_departamento 
 in (select d.id_departamento from departamentos d 
-where d.id_provincia = 2)) as nom
-where p.id_provincia = 2
+where d.id_provincia = 13)) as nom
+where p.id_provincia = 13
