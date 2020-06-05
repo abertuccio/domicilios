@@ -1,7 +1,7 @@
 require("RPostgreSQL")
 require("stringdist")
 
-id_provincia <- 2
+id_provincia <- 1  #SOLO CABA POR AHORA
 
 con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
 
@@ -62,18 +62,18 @@ actualizar <- o[!is.na(o$norm_2),c("municipio","ciudad","id_pais","id_provincia"
 
 excluidos <- data.frame(o[is.na(o$norm_2),c("ciudad","norm_max")])
 
-# dbWriteTable(con, "rnpr_asentamientos_sin_departamentos", actualizar, row.names=TRUE, append=FALSE)
-# 
-# dbGetQuery(con, paste("UPDATE rnpr_distincts rd
-#                   SET id_asentamiento = n.id_asentamiento,
-#                   id_departamento = n.id_departamento
-#                   FROM rnpr_asentamientos_sin_departamentos n
-#                   WHERE rd.ciudad = n.ciudad
-#                   and rd.municipio = n.municipio
-#                   AND rd.id_pais = 12
-#                   AND rd.id_provincia = ",id_provincia))
-# 
-# dbRemoveTable(con, "rnpr_asentamientos_sin_departamentos")
+ dbWriteTable(con, "rnpr_asentamientos_sin_departamentos", actualizar, row.names=TRUE, append=FALSE)
+ 
+ dbGetQuery(con, paste("UPDATE rnpr_distincts rd
+                   SET id_asentamiento = n.id_asentamiento,
+                   id_departamento = n.id_departamento
+                   FROM rnpr_asentamientos_sin_departamentos n
+                   WHERE rd.ciudad = n.ciudad
+                   and rd.municipio = n.municipio
+                   AND rd.id_pais = 12
+                   AND rd.id_provincia = ",id_provincia))
+ 
+ dbRemoveTable(con, "rnpr_asentamientos_sin_departamentos")
 
 dbDisconnect(con)
 
