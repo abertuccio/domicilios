@@ -24,9 +24,10 @@ normalizacion <- function(o,n,nivel,id_padre){
   n$p_norm <- gsub("ú", "u", n$p_norm, perl=TRUE)
   
   o[,c("norm_2","codigo_2")] <- n[amatch(o$p_norm, n$p_norm, maxDist=2),][,c("nombre","id")]
-  o[,c("norm_max","codigo_max")] <- n[amatch(o$p_norm, n$p_norm, maxDist=7),][,c("nombre","id")]
+  o[,c("norm_max","codigo_max")] <- n[amatch(o$p_norm, n$p_norm, maxDist=15),][,c("nombre","id")]
+  o$dist <- stringdist(o$p_norm,o$norm_max)
   
-  excluidos <- data.frame(o[is.na(o$norm_2),c("nombre","norm_max")])
+  excluidos <- data.frame(o[is.na(o$norm_2),c("nombre","norm_max","dist")])
   
   if(nrow(excluidos)>0){#ver si esto va
    excluidos$id_padre <- id_padre

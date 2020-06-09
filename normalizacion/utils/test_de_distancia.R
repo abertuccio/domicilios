@@ -21,4 +21,8 @@ valores2 <- gsub("ó", "o", valores2, perl=TRUE)
 valores2 <- gsub("ú", "u", valores2, perl=TRUE)
 
 
-amatch(valores1, valores2, maxDist=7)
+amatch(valores1, valores2, maxDist=12)
+
+stringdist(c("a","b"),c("awww","b"))
+
+
