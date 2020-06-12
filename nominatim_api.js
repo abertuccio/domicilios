@@ -2,23 +2,25 @@ const queryString = require('query-string');
 const http = require('http');
 const https = require('https');
 
+const nominatim = {hostname:'nominatim.openstreetmap.org',
+                    port:443} 
+
+const local =  {hostname:'127.0.0.1',
+                port:7070}                    
+
 async function get(direccion){
 
-    // if(direccion.city == 'Villa Lynch'){
-
-    //   console.log(queryString.stringify(direccion));
-    // }
-
     const parsed = queryString.stringify(direccion)
-
+    const q = "q="+direccion.city+","+direccion.county+","+direccion.state+","+direccion.country+"&polygon_geojson=1&format=json";
+    const parsed_q = encodeURI(q);
 
     return new Promise((resolve, reject) => {
 
         let output = '';
 
-        https.get({            
-            hostname: 'nominatim.openstreetmap.org',
-            port: 443,
+        http.get({            
+            hostname: local.hostname,
+            port: local.port,
             path: '/search.php?'+parsed,
             headers: { 'User-Agent': 'DOM-2020' }
           }, (res) => {

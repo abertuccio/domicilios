@@ -30,13 +30,13 @@ const direccion = {
             const ase_norm_query = await client.query(`select a.id_asentamiento, a.nombre, d.nombre_nominatim as departamento, p.nombre_nominatim as provincia from asentamientos a
             inner join departamentos d on a.id_departamento = d.id_departamento 
             inner join provincias p on p.id_provincia = d.id_provincia
-            where a.id_departamento = 89
+            where a.relation is null
             union 
             select sa.id_asentamiento, sa.sinonimo as nombre, d.nombre_nominatim as departamento, p.nombre_nominatim as provincia from sinonimos_asentamientos sa 
             inner join asentamientos a on a.id_asentamiento = sa.id_asentamiento 
             inner join departamentos d on a.id_departamento = d.id_departamento 
             inner join provincias p on p.id_provincia = d.id_provincia
-            where a.id_departamento = 89`);
+            where a.relation is null`);
                                                   
             const ase_norm =  ase_norm_query.rows;
 
@@ -61,7 +61,7 @@ const direccion = {
 
                     if(ase_geo.length && "display_name" in ase_geo[0]){
 
-                        // console.log(ase_geo[0].display_name);
+                        console.log(ase_geo[0]);
 
                           encontrados++;
 
@@ -84,15 +84,13 @@ const direccion = {
                           poligon = ase_geo[0].geojson                          
                           poligon.crs = JSON.parse('{"type":"name","properties":{"name":"EPSG:4326"}}')
 
-                          if(direccion.city == 'Villa Lynch'){
+                          if(ase_geo[0].geojson.type == "Polygon"){
+                            await client.query(`update asentamientos 
+                                                set poligono = ST_TRANSFORM(ST_GeomFromGeoJSON('${JSON.stringify(poligon)}'),3857)
+                                                where id_asentamiento = ${ase_norm[i].id_asentamiento}`);                   
 
-                            console.log(ase_geo);
                           }
 
-
-                        await client.query(`update asentamientos 
-                                            set poligono = ST_TRANSFORM(ST_GeomFromGeoJSON('${JSON.stringify(poligon)}'),3857)
-                                            where id_asentamiento = ${ase_norm[i].id_asentamiento}`);                    
 
                     }
                     else{
@@ -100,35 +98,36 @@ const direccion = {
                         //console.log("No se encontró "+ase_norm[i].nombre);
                     }
 
-                    // console.log("Procesesado: "+ Math.floor(i*100/ase_norm.length)+"%"+" - Encontrados: "+encontrados+" - No encontrados: "+no_encontrados);
+                    console.log("Procesesado: "+ Math.floor(i*100/ase_norm.length)+"%"+" - Encontrados: "+encontrados+" - No encontrados: "+no_encontrados);
 
-                 }, 10000 * i);
+                 }, 50 * i);
 
                  
                 }                           
                 
                 console.log("FIN");
-                //    await client.query(`update asentamientos 
-                //                         set poligono = x.geometry
-                //                         from
-                //                         (SELECT osm_id, geometry FROM dblink
-                //                             ('nomimap',
-                //                             'select 
-                //                                 osm_type,
-                //                                 osm_id, 
-                //                                 geometry 
-                //                             from public.placex'
-                //                             ) 
-                //                         AS DATA(
-                //                             osm_type bpchar,
-                //                             osm_id int8, 
-                //                             geometry geometry
-                //                         )
-                //                         where osm_type = 'R'
-                //                         and osm_id in (select relation from asentamientos)) as x
-                //                         where relation = x.osm_id`);
+                  //  await client.query(`update asentamientos 
+                  //                       set poligono = x.geometry
+                  //                       from
+                  //                       (SELECT osm_id, geometry FROM dblink
+                  //                           ('nomimap',
+                  //                           'select 
+                  //                               osm_type,
+                  //                               osm_id, 
+                  //                               geometry 
+                  //                           from public.placex'
+                  //                           ) 
+                  //                       AS DATA(
+                  //                           osm_type bpchar,
+                  //                           osm_id int8, 
+                  //                           geometry geometry
+                  //                       )
+                  //                       where osm_type = 'R'
+                  //                       and osm_id in (select relation from asentamientos)) as x
+                  //                       where relation = x.osm_id`);
       
     } finally {
       client.release()
     }
   })().catch(err => console.log(err.stack))
+
