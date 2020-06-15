@@ -63,7 +63,7 @@ dbGetQuery(con, "update rnpr_distincts rd set id_departamento = null where id_pa
                                    nivel = "departamentos",
                                    id_padre = row$id_provincia)
    
-   dbWriteTable(con, "rnpr_departamentos_normalizados", departamentos, row.names=TRUE, append=FALSE)
+  dbWriteTable(con, "rnpr_departamentos_normalizados", departamentos, row.names=TRUE, append=FALSE)
    
    
    print(paste("---> Actualizando departamentos de: ",row$nombre))

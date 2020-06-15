@@ -6,6 +6,7 @@ con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost'
 
 o <- dbGetQuery(con, "select distinct(provincia) as nombre from rnpr_distincts rd
                           where regexp_replace(regexp_replace(rd.pais, '^\\s+', ''), '\\s+$', '') = ''
+                          or pais = ' '
                           or pais is null")
 
 n <- dbGetQuery(con, "select p.id_provincia, p.nombre from provincias p 
@@ -15,6 +16,8 @@ n <- dbGetQuery(con, "select p.id_provincia, p.nombre from provincias p
                       where id_provincia in (
                       select p.id_provincia from provincias p
                       )")
+
+print(o)
 
 o$p_norm <- tolower(o$nombre)
 o$p_norm <- gsub("[^a-záéíóúñ0-9]+", "", o$p_norm, perl=TRUE)

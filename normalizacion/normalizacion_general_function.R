@@ -1,34 +1,46 @@
 require("stringdist")
+require("here")
+source(here("estandarizacion_vectores.R"))
 
 normalizacion <- function(o,n,nivel,id_padre){
 
   ORIGENES_DISTINTOS = nrow(o)
   
-  o$p_norm <- tolower(o$nombre)
-  o$p_norm <- gsub("[^a-záéíóúñ0-9]+", "", o$p_norm, perl=TRUE)
-  o$p_norm <- gsub("á", "a", o$p_norm, perl=TRUE)
-  o$p_norm <- gsub("é", "e", o$p_norm, perl=TRUE)
-  o$p_norm <- gsub("í", "i", o$p_norm, perl=TRUE)
-  o$p_norm <- gsub("ó", "o", o$p_norm, perl=TRUE)
-  o$p_norm <- gsub("ú", "u", o$p_norm, perl=TRUE)
-  o <- o[o$p_norm != "sininformar",]
+  # o$norm <- tolower(o$nombre)
+  # o$norm <- gsub("[^a-záéíóúñ0-9]+", "", o$norm, perl=TRUE)
+  # o$norm <- gsub("á", "a", o$norm, perl=TRUE)
+  # o$norm <- gsub("é", "e", o$norm, perl=TRUE)
+  # o$norm <- gsub("í", "i", o$norm, perl=TRUE)
+  # o$norm <- gsub("ó", "o", o$norm, perl=TRUE)
+  # o$norm <- gsub("ú", "u", o$norm, perl=TRUE)
+  o <- estandarizacion(o)
+  o <- o[o$norm != "sininformar",]
   
   NORMA_DISTINTOS = nrow(n)
   
-  n$p_norm <- tolower(n$nombre)
-  n$p_norm <- gsub("[^a-záéíóúñ0-9]+", "", n$p_norm, perl=TRUE)
-  n$p_norm <- gsub("á", "a", n$p_norm, perl=TRUE)
-  n$p_norm <- gsub("é", "e", n$p_norm, perl=TRUE)
-  n$p_norm <- gsub("í", "i", n$p_norm, perl=TRUE)
-  n$p_norm <- gsub("ó", "o", n$p_norm, perl=TRUE)
-  n$p_norm <- gsub("ú", "u", n$p_norm, perl=TRUE)
+  # n$norm <- tolower(n$nombre)
+  # n$norm <- gsub("[^a-záéíóúñ0-9]+", "", n$norm, perl=TRUE)
+  # n$norm <- gsub("á", "a", n$norm, perl=TRUE)
+  # n$norm <- gsub("é", "e", n$norm, perl=TRUE)
+  # n$norm <- gsub("í", "i", n$norm, perl=TRUE)
+  # n$norm <- gsub("ó", "o", n$norm, perl=TRUE)
+  # n$norm <- gsub("ú", "u", n$norm, perl=TRUE)
+  n <- estandarizacion(n)
   
-  o[,c("norm_2","codigo_2")] <- n[amatch(o$p_norm, n$p_norm, maxDist=2),][,c("nombre","id")]
-  o[,c("norm_max","codigo_max")] <- n[amatch(o$p_norm, n$p_norm, maxDist=15),][,c("nombre","id")]
-  o$dist <- stringdist(o$p_norm,o$norm_max)
+  # if(nivel == "asentamientos" && id_padre == 407){
+  #   print(id_padre)
+  #   print(o)
+  #   print(n)
+  # }
   
+  o[,c("norm_2","codigo_2")] <- n[amatch(o$norm, n$norm, maxDist=2),][,c("nombre","id")]
+  o[,c("norm_max","codigo_max")] <- n[amatch(o$norm, n$norm, maxDist=15),][,c("nombre","id")]
+  o$dist <- stringdist(o$norm,o$norm_max)
+  
+  nombres_matcheados <- o[!is.na(o$norm_2),"nombre"]
   excluidos <- data.frame(o[is.na(o$norm_2),c("nombre","norm_max","dist")])
-  
+  excluidos <- subset(excluidos, !(nombre %in% nombres_matcheados$nombre))
+
   if(nrow(excluidos)>0){#ver si esto va
    excluidos$id_padre <- id_padre
    dbWriteTable(con, paste("rnpr_",nivel,"_excluidos",sep = ""), excluidos, row.names=TRUE, append=TRUE)
@@ -38,8 +50,7 @@ normalizacion <- function(o,n,nivel,id_padre){
   
   #EN EL CASO TESTEADO DEJAMOS LOS VALORES NORM 2 NO VACIOS
   o <- o[!is.na(o$norm_2),c("nombre","codigo_2")] 
-  o$id <- o[,"codigo_2"]
-  o <- o[,c("nombre","id")]
+  colnames(o) <- c("nombre", "id")
   
   NORMALIZADOS <- nrow(o)
   
