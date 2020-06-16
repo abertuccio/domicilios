@@ -1,5 +1,7 @@
 require("RPostgreSQL")
 require("stringdist")
+require("here")
+source(here("estandarizacion_vectores.R"))
 
 con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
 
@@ -19,6 +21,8 @@ oringen_asentamientos_barrios <- dbGetQuery(con, paste("select provincia,
 
 by(oringen_asentamientos_barrios, 1:nrow(oringen_asentamientos_barrios), function(row){
  
+  print(paste("buscando...",row$id_departamento))
+  
   n <- dbGetQuery(con, paste("select b3.id_barrio, b3.nombre, b3.id_asentamiento from barrios b3
                             inner join asentamientos a on b3.id_asentamiento = a.id_asentamiento 
                             inner join departamentos d on d.id_departamento = a.id_departamento
@@ -41,6 +45,7 @@ by(oringen_asentamientos_barrios, 1:nrow(oringen_asentamientos_barrios), functio
   row$p_norm <- gsub("ó", "o", row$p_norm, perl=TRUE)
   row$p_norm <- gsub("ú", "u", row$p_norm, perl=TRUE)
   
+  
   n$p_norm <- tolower(n$nombre)
   n$p_norm <- gsub("[^a-záéíóúñ0-9]+", "", n$p_norm, perl=TRUE)
   n$p_norm <- gsub("á", "a", n$p_norm, perl=TRUE)
@@ -49,8 +54,12 @@ by(oringen_asentamientos_barrios, 1:nrow(oringen_asentamientos_barrios), functio
   n$p_norm <- gsub("ó", "o", n$p_norm, perl=TRUE)
   n$p_norm <- gsub("ú", "u", n$p_norm, perl=TRUE)
   
+  
   if(nrow(n)>0){
     
+  # row <- estandarizacion(row)
+  # n <- estandarizacion(n)
+  
   n$id_departamento <- row$id_departamento
   
   row[,c("norm_2","id_asentamiento","id_departamento","id_barrio")] <- n[amatch(row$p_norm, n$p_norm, maxDist=2),][,c("nombre","id_asentamiento","id_departamento","id_barrio")]

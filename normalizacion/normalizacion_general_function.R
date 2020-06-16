@@ -27,11 +27,11 @@ normalizacion <- function(o,n,nivel,id_padre){
   # n$norm <- gsub("ú", "u", n$norm, perl=TRUE)
   n <- estandarizacion(n)
   
-  # if(nivel == "asentamientos" && id_padre == 407){
-  #   print(id_padre)
-  #   print(o)
-  #   print(n)
-  # }
+  if(nivel == "asentamientos" && id_padre == 453){
+    print(id_padre)
+    print(o)
+    print(n)
+  }
   
   o[,c("norm_2","codigo_2")] <- n[amatch(o$norm, n$norm, maxDist=2),][,c("nombre","id")]
   o[,c("norm_max","codigo_max")] <- n[amatch(o$norm, n$norm, maxDist=15),][,c("nombre","id")]

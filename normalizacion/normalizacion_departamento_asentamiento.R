@@ -3,6 +3,8 @@ require("here")
 
 source(here("normalizacion_general_function.R"))
 
+completo <- TRUE
+
 con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
 
 if(dbExistsTable(con, "rnpr_reporte_normalizacion")){
@@ -34,7 +36,14 @@ norma_provincias <- dbGetQuery(con, "select id_provincia,
                                       from provincias p 
                                       where id_pais = 12;")
 
-dbGetQuery(con, "update rnpr_distincts rd set id_departamento = null where id_pais = 12;")
+condicion_departamentos <- "and d.id_departamento is null"
+condicion_asentamientos <- "and rd.id_asentamiento is null"
+
+if(completo){
+   dbGetQuery(con, "update rnpr_distincts rd set id_departamento = null where id_pais = 12;")
+   condicion_departamentos <- ""
+   condicion_asentamientos <- ""
+}
 
  by(norma_provincias, 1:nrow(norma_provincias), function(row){
     
@@ -49,19 +58,28 @@ dbGetQuery(con, "update rnpr_distincts rd set id_departamento = null where id_pa
                                             		nombre 
                                             		from departamentos d 
                                             		where id_provincia = ",row$id_provincia,
-                                            		" union 
+                                            		" ",condicion_departamentos," union 
                                                 select id_departamento as id,
                                             		sinonimo as nombre
                                             		from sinonimos_departamentos sd 
                                             		where id_departamento 
                                             		in (select id_departamento
                                             		from departamentos d 
-                                            		where id_provincia = ",row$id_provincia,");"))
+                                            		where id_provincia = ",row$id_provincia
+                                                ," ",condicion_departamentos,");"))
+   
+   # if(nrow(origen_departamentos)>0 || nrow(departamentos)>0 ){
+   #       print(nrow(origen_departamentos))
+   #       print(nrow(norma_departamentos))
+   #       next
+   # }
    
    departamentos <- normalizacion(o = origen_departamentos,
                                    n = norma_departamentos,
                                    nivel = "departamentos",
                                    id_padre = row$id_provincia)
+   
+   
    
   dbWriteTable(con, "rnpr_departamentos_normalizados", departamentos, row.names=TRUE, append=FALSE)
    
@@ -84,17 +102,21 @@ dbGetQuery(con, "update rnpr_distincts rd set id_departamento = null where id_pa
    print(paste("--- Inicio asentamientos de provincia de ",row$nombre))
    print("--------------------------------------------- ")
    
-   dbGetQuery(con, "update rnpr_distincts rd set id_asentamiento = null where id_pais = 12;")
    
    by(norma_departamentos, 1:nrow(norma_departamentos), function(departamento){
+      
+      if(completo){
+         dbGetQuery(con, paste("update rnpr_distincts rd set id_asentamiento = null where id_pais = 12 and id_departamento =",departamento$id,";"))
+      }
       
    print(paste("--- Buscando asentamientos de departamento: ",departamento$nombre,". Provincia de ",row$nombre," id_provincia:",row$id_provincia))
       
       origen_asentamientos <- dbGetQuery(con, paste("select ciudad as nombre
                                                     from rnpr_distincts rd 
-                                                    where id_departamento = ",departamento$id))
+                                                    where id_departamento = ",departamento$id,
+                                                    " ",condicion_asentamientos))
       
-   print(paste("--- --- Asentamientos de departamento: ",departamento$nombre," ORIGEN --> ",nrow(origen_asentamientos)))   
+   # print(paste("--- --- Asentamientos de departamento: ",departamento$nombre," ORIGEN --> ",nrow(origen_asentamientos)))   
       
       norma_asentamientos <- dbGetQuery(con, paste("select id_asentamiento as id, 
                                                          nombre 
@@ -109,7 +131,7 @@ dbGetQuery(con, "update rnpr_distincts rd set id_departamento = null where id_pa
                                                          from asentamientos a 
                                                          where id_departamento = ",departamento$id,")"))
       
-   print(paste("--- --- Asentamientos de departamento: ",departamento$nombre," NORMA --> ",nrow(norma_asentamientos)))   
+   # print(paste("--- --- Asentamientos de departamento: ",departamento$nombre," NORMA --> ",nrow(norma_asentamientos)))   
       
      if(nrow(origen_asentamientos)<1){
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
