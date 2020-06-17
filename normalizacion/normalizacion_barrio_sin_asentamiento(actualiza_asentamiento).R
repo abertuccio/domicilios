@@ -69,7 +69,7 @@ by(oringen_asentamientos_barrios, 1:nrow(oringen_asentamientos_barrios), functio
   
     if(nrow(actualizar)>0){
       
-      print("actualizando...")
+      print(paste("actualizando...",actualizar$id_asentamiento))
       
       dbGetQuery(con, paste("UPDATE rnpr_distincts rd 
                             SET id_asentamiento = ",actualizar$id_asentamiento,",
@@ -78,6 +78,10 @@ by(oringen_asentamientos_barrios, 1:nrow(oringen_asentamientos_barrios), functio
                             and rd.id_departamento = ",actualizar$id_departamento," 
                             AND rd.id_pais = 12 
                             AND rd.id_provincia = ",actualizar$id_provincia,sep = ''))
+      
+      dbGetQuery(con, paste("DELETE from rnpr_asentamientos_excluidos
+                            where nombre = '",actualizar$ciudad,"'
+                             and id_padre = ",actualizar$id_departamento,sep=''))
 
     }
     

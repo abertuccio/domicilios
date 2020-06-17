@@ -267,7 +267,21 @@ where d.id_departamento in (500)
 
 select * from asentamientos_sin_identificar asi order by cast(cant_ciudad as int) desc
 
+insert into barrios (codigo,nombre,latitud,longitud,relation,fuente_ubicacion,point,nombre_nominatim,nombre_nominatim_long,poligono,estado,estado_descripcion,f_actualizacion,id_asentamiento)
+select codigo, nombre, latitud, longitud, relation, 'SINTYS', point, nombre_nominatim, nombre_nominatim_long, poligono,1,'Se movió de Barha a Barrios',now(),208 from asentamientos a where id_departamento = 420 and id_asentamiento = 10433;
 
 
+select a.id_asentamiento, a.nombre, d.nombre_nominatim as departamento, p.nombre_nominatim as provincia from asentamientos a
+            inner join departamentos d on a.id_departamento = d.id_departamento 
+            inner join provincias p on p.id_provincia = d.id_provincia
+            where a.relation is null
+            and a.id_departamento = 89
+            union 
+            select sa.id_asentamiento, sa.sinonimo as nombre, d.nombre_nominatim as departamento, p.nombre_nominatim as provincia from sinonimos_asentamientos sa 
+            inner join asentamientos a on a.id_asentamiento = sa.id_asentamiento 
+            inner join departamentos d on a.id_departamento = d.id_departamento 
+            inner join provincias p on p.id_provincia = d.id_provincia
+            where a.relation is null
+            and a.id_departamento = 89
 
 
