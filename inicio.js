@@ -1,74 +1,58 @@
-const pgp = require('pg-promise')(/* initialization options */);
-const nominatim_api = require('./nominatim_api');
+var express = require('express');
+var app = express();
+app.use(express.static('frontend'));
+const { Pool } = require('pg')
 
-const cn = {
-    host: 'localhost', 
-    port: 6432,
-    database: 'domicilios',
-    user: 'postgres',
-    password: '1234'
-};
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'domicilios',
+  password: '1234',
+  port: 9999,
+});
 
-const db = pgp(cn);
+app.get('/', function (req, res) {
+  res.send('El servicio anda');
+});
 
-(async()=>{
-  
-  const direccion = {
-    street:null,
-    city:null,
-    county:null,
-    state:null,
-    country:"Argentina",
-    postalcode:null,
-    polygon_geojson:1,
-    format:"json",
-    "accept-language":"es"
-  }
-  
-  const provincias_n  = await db.many("select * from provincias where id_provincia in (1)");
+app.get('/poligonos_provincias', async function (req, res) {
+  const client = await pool.connect();
+  const departamentos = await client.query('select p.id_provincia, p.nombre, ST_AsGeoJSON(p.poligono) as poligono from provincias p');
+  // console.log(departamentos)
+  res.send(departamentos);
+});
 
-  provincias_n.forEach(async p=>{
+app.get('/poligonos_departamentos/:id_provincia', async function (req, res) {
+  const id_provincia = req.params.id_provincia
+  const client = await pool.connect();
+  const departamentos = await client.query('select d.id_departamento, d.nombre, ST_AsGeoJSON(d.poligono) as poligono from departamentos d where d.id_provincia ='+id_provincia);
+  // console.log(departamentos)
+  res.send(departamentos);
+});
 
-    direccion.state = p.nombre;
+app.get('/provincias', async function (req, res) {  
+  const client = await pool.connect();
+  const provincias = await client.query('select id_provincia as id, nombre as text from provincias');
+  // console.log(departamentos)
+  res.send(provincias);
+});
 
-    const res = await nominatim_api.get(direccion);
+app.get('/departamentos', async function (req, res) {  
+  const client = await pool.connect();
+  const provincias = await client.query('select id_departamento as id, nombre from departamentos');
+  // console.log(departamentos)
+  res.send(provincias);
+});
 
-    if(res.length && "display_name" in res[0]){
-       console.log("P_B: "+ p.nombre + "    -    P_N :"+res[0].display_name);
-
-       const departamentos_n  = await db.many("select * from departamentos where id_provincia = "+p.id_provincia);
-
-       departamentos_n.forEach(async d=>{
-        d.nombre = d.nombre.replace("\n","");
-        direccion.county = d.nombre.trim();
-
-        //console.log(direccion)
-
-        if(direccion.county.length){
-
-          const res2 = await nominatim_api.get(direccion);
-
-          if(res2.length && "display_name" in res2[0]){
-            console.log("D_B_P "+direccion.state+": "+ d.nombre + "    -    P_N_P "+direccion.state+":"+res2[0].display_name);
-          }
-          else{
-            "!!!!!!!!!!!!!!!!!!!!!!!! "+d.nombre+" no encontrada !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-          } 
+app.get('/asentamientos', async function (req, res) {  
+  const client = await pool.connect();
+  const provincias = await client.query('select id_asentamiento as id, nombre from asentamientos');
+  // console.log(departamentos)
+  res.send(provincias);
+});
 
 
-        }        
-        
-        
 
-       })
-
-     }
-     else{
-       "!!!!!!!!!!!!!!!!!!!!!!!! "+p.nombre+" no encontrada !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-     }
-  
-
-  })
-
-
-})();
+app.listen(3000, function () {
+  console.log('funcionando en el puerto 3000!');
+});
