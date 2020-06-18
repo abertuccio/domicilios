@@ -1,2 +1,8 @@
 /node_modules
 .Rproj.user
+frontend/poligonos/asentamientos/*
+!frontend/poligonos/asentamientos/.gitkeep 
+frontend/poligonos/departamentos/*
+!frontend/poligonos/departamentos/.gitkeep 
+frontend/poligonos/provincias/*
+!frontend/poligonos/provincias/.gitkeep 
