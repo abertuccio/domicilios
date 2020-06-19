@@ -6,14 +6,30 @@ body{
 
 .container{
     float: left;
-    margin-left: 28px;
+    margin-left: 10px;
     font-size: 11px;
+    margin-top: 10px;
 }
 
 .no{
-    background-color: red;
+    background-color: none;
 }
 
-.si{
-    background-color: green;
+.dataTable tbody tr td button{
+    padding: 0px;
+    border-radius: 5px;
+}
+
+.dataTable tbody tr td button i {
+    font-size: 18px;
+}
+
+.mostrar_p.si{
+    background-color: #c3d495;
+}
+.mostrar_d.si,.mostrar_hijos_p.si{
+    background-color: #699cd7;
+}
+.mostrar_a.si,.mostrar_hijos_d.si{
+    background-color: #da6c78;
 }

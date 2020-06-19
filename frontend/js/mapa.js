@@ -22,14 +22,14 @@ $(document).ready(function () {
                 "aTargets": [2],
                 "mData": "id",
                 "mRender": function (data, type, full) {
-                    return '<button class="mostrar_p no" href="#"' + 'id="' + data + '">M</button>';
+                    return '<button class="mostrar_p no" href="#"' + 'id="' + data + '"><i class="material-icons">keyboard_arrow_up</i></button>';
                 }
             },
             {
                 "aTargets": [3],
                 "mData": "id",
                 "mRender": function (data, type, full) {
-                    return '<button class="mostrar_hijos_p no" href="#"' + 'id="' + data + '">MH</button>';
+                    return '<button class="mostrar_hijos_p no" href="#"' + 'id="' + data + '"><i class="material-icons">keyboard_arrow_right</i></button>';
                 }
             }
         ]
@@ -45,26 +45,28 @@ $(document).ready(function () {
         },
         "columns": [
             { "data": "id" },
+            { "data": "id_provincia" },
             { "data": "nombre_provincia" },
             { "data": "nombre" }
-        ]
-        ,
+        ],
         "aoColumnDefs": [
-            {
-                "aTargets": [3],
-                "mData": "id",
-                "mRender": function (data, type, full) {
-                    return '<button class="mostrar_d no" href="#"' + 'id="' + data + '">M</button>';
-                }
-            },
+            { "bVisible": false, "aTargets": [1] },
             {
                 "aTargets": [4],
                 "mData": "id",
                 "mRender": function (data, type, full) {
-                    return '<button class="mostrar_hijos_d no" href="#"' + 'id="' + data + '">MH</button>';
+                    return '<button class="mostrar_d no" href="#"' + 'id="' + data + '"><i class="material-icons">keyboard_arrow_up</i></button>';
+                }
+            },
+            {
+                "aTargets": [5],
+                "mData": "id",
+                "mRender": function (data, type, full) {
+                    return '<button class="mostrar_hijos_d no" href="#"' + 'id="' + data + '"><i class="material-icons">keyboard_arrow_right</i></button>';
                 }
             }
-        ]
+        ],
+        "search": { regex: true }
     });
 });
 
@@ -78,24 +80,27 @@ $(document).ready(function () {
         "columns": [
             { "data": "id" },
             { "data": "nombre_provincia" },
+            { "data": "id_departamento" },
             { "data": "nombre_departamento" },
             { "data": "nombre" }
         ]
         ,
         "aoColumnDefs": [
+            { "bVisible": false, "aTargets": [2] },
             {
-                "aTargets": [4],
+                "aTargets": [5],
                 "mData": "id",
                 "mRender": function (data, type, full) {
-                    return '<button class="mostrar_a no" href="#"' + 'id="' + data + '">M</button>';
+                    return '<button class="mostrar_a no" href="#"' + 'id="' + data + '"><i class="material-icons">keyboard_arrow_up</i></button>';
                 }
             }
-        ]
+        ],
+        "search": { regex: true }
     });
 });
 
-const provinciasLayers = [];
-const departamentosLayers = [];
+let provinciasLayers = [];
+let departamentosLayers = [];
 let asentamientosLayers = [];
 
 fetch('http://127.0.0.1:3000/provincias')
@@ -111,7 +116,7 @@ fetch('http://127.0.0.1:3000/provincias')
                     "color": "#94c14d",
                     "fillColor": "",
                     "weight": 3,
-                    "opacity": 0.30
+                    "opacity": 0.50
                 };
 
                 provinciasLayers.push(
@@ -120,9 +125,7 @@ fetch('http://127.0.0.1:3000/provincias')
                             style: estiloProvincias,
                             onEachFeature: function (feature, layer) {
                                 layer.on('click', function (e) {
-                                    console.log("provincia: " + p.nombre);
-                                    //    console.log(p.id);
-                                    // departamentos(p.id_provincia)
+                                    layer.bindPopup(popupProvincias(p.id)).openPopup();
                                 })
                             }
                         })
@@ -134,7 +137,7 @@ fetch('http://127.0.0.1:3000/provincias')
     });
 
 
-    fetch('http://127.0.0.1:3000/departamentos')
+fetch('http://127.0.0.1:3000/departamentos')
     .then(function (response) {
         return response.json();
     })
@@ -147,7 +150,7 @@ fetch('http://127.0.0.1:3000/provincias')
                     "color": "#5b9ada",
                     "fillColor": "",
                     "weight": 2,
-                    "opacity": 0.60
+                    "opacity": 0.70
                 };
 
                 departamentosLayers.push(
@@ -156,9 +159,7 @@ fetch('http://127.0.0.1:3000/provincias')
                             style: estiloDepartamentos,
                             onEachFeature: function (feature, layer) {
                                 layer.on('click', function (e) {
-                                    console.log("departamento: " + p.nombre);
-                                    //    console.log(p.id);
-                                    // departamentos(p.id_provincia)
+                                    layer.bindPopup(popupDepartamentos(p.id)).openPopup();
                                 })
                             }
                         })
@@ -169,141 +170,37 @@ fetch('http://127.0.0.1:3000/provincias')
 
     });
 
-// const departamentos = function(id_provincia){
-//     fetch('http://127.0.0.1:3000/poligonos_departamentos/'+id_provincia)
-//   .then(function(response) {
-//     return response.json();
-//   })
-//   .then(function(filas) {
-//     const departamentos = filas.rows;
-
-//         var estiloDepartamentos = {
-//             "color": "#cc0000",
-//             "fillColor": "#cc0000",
-//             "weight": 2,
-//             "opacity": 0.60
-//         };
-
-//         departamentos.forEach(p => {
-//             let pol = L.geoJson(JSON.parse(p.poligono),{
-//                 style: estiloDepartamentos,
-//                 onEachFeature: function(feature, layer) {
-//                     layer.on('click', function(e) {
-//                        console.log("departamento: "+p.nombre);
-//                     //    console.log(p.id_provincia);
-//                     })
-//                     }
-//             });
-//             pol.addTo(mymap); 
-
-//           });
-
-//     });
-
-// }
-
-
-
-// fetch('http://127.0.0.1:3000/poligonos_provincias')
-//   .then(function(response) {
-//     return response.json();
-//   })
-//   .then(function(filas) {
-//       const provincias = filas.rows;  
-//     //   console.log(provincias.length)
-
-// // console.log(JSON.parse(provincias[0].st_asgeojson));
-
-// // L.geoJson(JSON.parse(provincias[0].v)).addTo(mymap);
-
-//         var estiloProvincias = {
-//             "color": "#7b7100",
-//             "fillColor": "#fff79c",
-//             "weight": 1,
-//             "opacity": 0.40
-//         };
-
-//       provincias.forEach(p => {
-//         let pol = L.geoJson(JSON.parse(p.poligono),{
-//             style: estiloProvincias,
-//             onEachFeature: function(feature, layer) {
-//                 layer.on('click', function(e) {
-//                    console.log("provincia: "+p.nombre);
-//                 //    console.log(p.id);
-//                    departamentos(p.id_provincia)
-//                 })
-//                 }
-//         });
-//         pol.addTo(mymap); 
-
-//       });
-
-//   });
-
-// mymap.on('zoomend',function(e){	
-// 	var currZoom = mymap.getZoom();
-//     console.log(currZoom);
-// });
-
-// L.marker([51.5, -0.09]).addTo(mymap)
-// 	.bindPopup("<b>Hello world!</b><br />I am a popup.").openPopup();
-
-// L.circle([51.508, -0.11], 500, {
-// 	color: 'red',
-// 	fillColor: '#f03',
-// 	fillOpacity: 0.5
-// }).addTo(mymap).bindPopup("I am a circle.");
-
-// L.polygon([
-// 	[51.509, -0.08],
-// 	[51.503, -0.06],
-// 	[51.51, -0.047]
-// ]).addTo(mymap).bindPopup("I am a polygon.");
-
-
-// var popup = L.popup();
-
-// function onMapClick(e) {
-// 	popup
-// 		.setLatLng(e.latlng)
-// 		.setContent("You clicked the map at " + e.latlng.toString())
-// 		.openOn(mymap);
-// }
-
-// mymap.on('click', onMapClick);
-
-
-
 $('#provincias').on('click', '.mostrar_p', function (e) {
 
     const id = $(this).attr("id");
 
-    console.log(id);
-
     if ($(this).hasClass("no")) {
+
+        $(this).find('i').text('keyboard_arrow_down')
 
         $(this).removeClass("no").addClass("si");
 
         provinciasLayers.forEach(p => {
             if (p.id == id) {
                 p.layer.addTo(mymap);
+                mymap.fitBounds(p.layer.getBounds());
             }
         });
 
     }
     else {
 
+        $(this).find('i').text('keyboard_arrow_up')
+
         provinciasLayers.forEach(p => {
             if (p.id == id) {
-                mymap.removeLayer(p.layer);
+                mymap.removeLayer(p.layer);                
             }
-        },[]);
+        }, []);
 
         $(this).removeClass("si").addClass("no");
 
     }
-
-
 
 });
 
@@ -311,32 +208,33 @@ $('#departamentos').on('click', '.mostrar_d', function (e) {
 
     const id = $(this).attr("id");
 
-    console.log(id);
-
     if ($(this).hasClass("no")) {
+
+        $(this).find('i').text('keyboard_arrow_down')
 
         $(this).removeClass("no").addClass("si");
 
         departamentosLayers.forEach(p => {
             if (p.id == id) {
-                p.layer.addTo(mymap);
+                p.layer.addTo(mymap); 
+                mymap.fitBounds(p.layer.getBounds(), {padding: [70,70]});
             }
         });
 
     }
     else {
 
+        $(this).find('i').text('keyboard_arrow_up')
+
         departamentosLayers.forEach(p => {
             if (p.id == id) {
-                mymap.removeLayer(p.layer);
+                mymap.removeLayer(p.layer);                
             }
-        });
+        });      
 
         $(this).removeClass("si").addClass("no");
 
     }
-
-
 
 });
 
@@ -345,13 +243,14 @@ $('#asentamientos').on('click', '.mostrar_a', function (e) {
 
     const id = $(this).attr("id");
 
-    console.log(id);
-
     if ($(this).hasClass("no")) {
+
+
+        $(this).find('i').text('keyboard_arrow_down')
 
         $(this).removeClass("no").addClass("si");
 
-        
+
 
         $.getJSON('./poligonos/asentamientos/' + id + '.json', function (data) {
 
@@ -374,33 +273,29 @@ $('#asentamientos').on('click', '.mostrar_a', function (e) {
                         style: estiloAsentamientos,
                         onEachFeature: function (feature, layer) {
                             layer.on('click', function (e) {
-                                // console.log("asentamiento: " + p.nombre);
-                                //    console.log(p.id);
-                                // departamentos(p.id_provincia)
+                                layer.bindPopup(popupAsentamientos(id)).openPopup();
                             })
                         }
                     })
                 });
 
-                // console.log(asentamientosLayers);
+            // console.log(asentamientosLayers);
             asentamientosLayers.forEach(p => {
                 if (p.id == +id) {
-                    console.log("obiamento no de agregamos")
-                    p.layer.addTo(mymap);
+                    p.layer.addTo(mymap);    
                 }
             });
 
-
+            const bounds = asentamientosLayers.map(a => a.layer.getBounds());
+            mymap.fitBounds(bounds, {padding: [50,50]});
+            // mymap.setZoom(mymap.getZoom() - 2);
 
         });
 
-
-
-
-            
-
     }
     else {
+
+        $(this).find('i').text('keyboard_arrow_up')
 
         asentamientosLayers.forEach(p => {
             if (p.id == id) {
@@ -408,29 +303,132 @@ $('#asentamientos').on('click', '.mostrar_a', function (e) {
             }
         });
 
-        asentamientosLayers = asentamientosLayers.reduce((p,c)=>{
-            if(c.id!==id){
+        asentamientosLayers = asentamientosLayers.reduce((p, c) => {
+            if (c.id !== id) {
                 p.push(c);
             }
             return p;
-        },[])
+        }, [])
 
         $(this).removeClass("si").addClass("no");
 
+        const bounds = asentamientosLayers.map(a => a.layer.getBounds());
+        mymap.fitBounds(bounds, {padding: [70,70]});
+        // mymap.setZoom(mymap.getZoom() - 2);
+
     }
 
-
+    
 
 });
 
 
+filtroDepartamento = [];
+filtroAsentamiento = [];
 
 
-// $.getJSON('./poligonos/asentamientos/1.json', function (data) {
+$('#provincias').on('click', '.mostrar_hijos_p', function (e) {
 
-//     console.log(data);
-    
-    
-// });
+    const table = $('#departamentos').DataTable();
+    const id = $(this).attr("id");
+
+    if ($(this).hasClass("no")) {
+
+        $(this).find('i').text('keyboard_arrow_left');
+        $(this).removeClass("no").addClass("si");
+
+        filtroDepartamento.push(id);
+
+        const filtro = (filtroDepartamento.length) ? "^" + filtroDepartamento.join("|") + "$" : "";
+
+        table.column(1).search(filtro, true, false).draw();
+
+    }
+    else {
+
+        $(this).find('i').text('keyboard_arrow_right');
+        $(this).removeClass("si").addClass("no");
+
+        filtroDepartamento = filtroDepartamento.reduce((p, c) => {
+            if (c !== id) {
+                p.push(c);
+            }
+            return p;
+        }, []);
+
+        const filtro = (filtroDepartamento.length) ? "^" + filtroDepartamento.join("|") + "$" : "";
+
+        table.column(1).search(filtro, true, false).draw();
+
+    }
+
+});
 
 
+$('#departamentos').on('click', '.mostrar_hijos_d', function (e) {
+
+    const table = $('#asentamientos').DataTable();
+    const id = $(this).attr("id");
+
+    if ($(this).hasClass("no")) {
+
+        $(this).find('i').text('keyboard_arrow_left');
+        $(this).removeClass("no").addClass("si");
+
+        filtroAsentamiento.push(id);
+
+        const filtro = (filtroAsentamiento.length) ? "^" + filtroAsentamiento.join("|") + "$" : "";
+
+        table.column(2).search(filtro, true, false).draw();
+
+    }
+    else {
+
+        $(this).find('i').text('keyboard_arrow_right');
+        $(this).removeClass("si").addClass("no");
+
+        filtroAsentamiento = filtroAsentamiento.reduce((p, c) => {
+            if (c !== id) {
+                p.push(c);
+            }
+            return p;
+        }, []);
+
+        const filtro = (filtroAsentamiento.length) ? "^" + filtroAsentamiento.join("|") + "$" : "";
+
+        table.column(2).search(filtro, true, false).draw();
+
+    }
+
+});
+
+
+function popupAsentamientos(id) {
+    const table = $('#asentamientos').DataTable();
+    var fd = table.data().filter((value, index) => { if (value.id == id) { return true; } })[0];
+    const data = `<ul style='padding-left: 27px;'>
+                    <li>Asentamiento: ${fd.nombre} (${fd.id}) </li>
+                    <li>Departamento: ${fd.nombre_departamento} (${fd.id_departamento}) </li>
+                    <li>Provincia: ${fd.nombre_provincia}</li>
+                </ul>`;
+    return data;
+}
+
+function popupDepartamentos(id) {
+    const table = $('#departamentos').DataTable();
+    var fd = table.data().filter((value, index) => { if (value.id == id) { return true; } })[0];
+    const data = `<ul style='padding-left: 27px;'>
+                    <li>Departamento: ${fd.nombre} (${fd.id}) </li>
+                    <li>Provincia: ${fd.nombre_provincia} (${fd.id_provincia}) </li>
+                </ul>`;
+    return data;
+}
+
+function popupProvincias(id) {
+    const table = $('#provincias').DataTable();
+    var fd = table.data().filter((value, index) => { if (value.id == id) { return true; } })[0];
+    const data = `<ul style='padding-left: 27px;'>                    
+                    <li>Provincia: ${fd.nombre} (${fd.id})</li>
+                </ul>`;
+    return data;
+}
