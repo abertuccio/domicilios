@@ -48,10 +48,12 @@ departamentos.rows.forEach(d=>{
   })
 });
 
-const asentamientos = await client.query('SELECT a.id_asentamiento, ST_AsGeoJSON(ST_Transform(ST_SetSRID(a.poligono, 3857),4326)) as pol from asentamientos a where poligono is not null');
+const asentamientos = await client.query('SELECT a.id_asentamiento, ST_AsGeoJSON(a.poligono) as pol from asentamientos a where poligono is not null');
 
 asentamientos.rows.forEach(a=>{
-  fs.writeFile('./asentamientos/'+a.id_asentamiento+'.json', a.pol,function (err) {
+  const pol = JSON.parse(a.pol);
+  pol.crs = {"type":"name","properties":{"name":"EPSG:4326"}}
+  fs.writeFile('./asentamientos/'+a.id_asentamiento+'.json', JSON.stringify(pol),function (err) {
     if (err) return console.log(err);
     console.log('ok ase');
   })

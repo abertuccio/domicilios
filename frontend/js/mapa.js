@@ -110,7 +110,7 @@ fetch('http://127.0.0.1:3000/provincias')
     .then(function (provincias) {
 
         provincias.rows.forEach(p => {
-            $.getJSON('./poligonos/provincias/' + p.id + '.json', function (data) {
+            $.getJSON('./poligonos/provincias/' + p.id + '.json?a=1', function (data) {
 
                 var estiloProvincias = {
                     "color": "#94c14d",
@@ -158,7 +158,7 @@ fetch('http://127.0.0.1:3000/departamentos')
                         id: p.id, layer: L.geoJson(data, {
                             style: estiloDepartamentos,
                             onEachFeature: function (feature, layer) {
-                                layer.on('click', function (e) {
+                                layer.on('click', function (e) {                                    
                                     layer.bindPopup(popupDepartamentos(p.id)).openPopup();
                                 })
                             }
@@ -217,7 +217,7 @@ $('#departamentos').on('click', '.mostrar_d', function (e) {
         departamentosLayers.forEach(p => {
             if (p.id == id) {
                 p.layer.addTo(mymap); 
-                mymap.fitBounds(p.layer.getBounds(), {padding: [70,70]});
+                // mymap.fitBounds(p.layer.getBounds(), {padding: [70,70]});
             }
         });
 
@@ -252,7 +252,7 @@ $('#asentamientos').on('click', '.mostrar_a', function (e) {
 
 
 
-        $.getJSON('./poligonos/asentamientos/' + id + '.json', function (data) {
+        $.getJSON('./poligonos/asentamientos/' + id + '.json?a=2', function (data) {
 
             var estiloAsentamientos = {
                 "color": "#ff4444",
@@ -287,7 +287,7 @@ $('#asentamientos').on('click', '.mostrar_a', function (e) {
             });
 
             const bounds = asentamientosLayers.map(a => a.layer.getBounds());
-            mymap.fitBounds(bounds, {padding: [50,50]});
+            // mymap.fitBounds(bounds, {padding: [50,50]});
             // mymap.setZoom(mymap.getZoom() - 2);
 
         });
@@ -313,7 +313,7 @@ $('#asentamientos').on('click', '.mostrar_a', function (e) {
         $(this).removeClass("si").addClass("no");
 
         const bounds = asentamientosLayers.map(a => a.layer.getBounds());
-        mymap.fitBounds(bounds, {padding: [70,70]});
+        // mymap.fitBounds(bounds, {padding: [70,70]});
         // mymap.setZoom(mymap.getZoom() - 2);
 
     }
