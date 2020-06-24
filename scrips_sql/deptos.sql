@@ -726,9 +726,9 @@ select a.id_asentamiento, a.nombre, d.nombre_nominatim as departamento, p.nombre
             and a.id_departamento = 89
             
             update asentamientos ast set 
-            poligono = (SELECT ST_Transform(ST_SetSRID(a.poligono, 3857),4326) as pol from asentamientos a where a.id_asentamiento = ast.id_asentamiento amd a.id_asentamiento is null)
-            where ast.id_asentamiento = $1
+            poligono = (SELECT ST_Transform(ST_SetSRID(a.poligono, 3857),4326) as pol from asentamientos a where a.id_asentamiento = ast.id_asentamiento)
+            where ST_SRID(ast.poligono) = 0;
             
-            select id_asentamiento, ST_SRID(poligono) from asentamientos a where ST_SRID(poligono) is not null 
+            select id_asentamiento, ST_SRID(poligono) from asentamientos a where ST_SRID(poligono) <> 4326
 
 

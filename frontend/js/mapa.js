@@ -32,6 +32,21 @@ $(document).ready(function () {
                     return '<button class="mostrar_hijos_p no" href="#"' + 'id="' + data + '"><i class="material-icons">keyboard_arrow_right</i></button>';
                 }
             }
+        ],
+        dom: 'Blfrtip',
+        buttons: [
+            {
+                text: 'MT',
+                action: function ( e, dt, node, config ) {
+                    $(".mostrar_p.no").click();
+                }
+            },
+            {
+                text: 'QT',
+                action: function ( e, dt, node, config ) {
+                    $(".mostrar_p.si").click();
+                }
+            }
         ]
     });
 });
@@ -66,7 +81,22 @@ $(document).ready(function () {
                 }
             }
         ],
-        "search": { regex: true }
+        "search": { regex: true },        
+        dom: 'Blfrtip',
+        buttons: [
+            {
+                text: 'MT',
+                action: function ( e, dt, node, config ) {
+                    $(".mostrar_d.no").click();
+                }
+            },
+            {
+                text: 'QT',
+                action: function ( e, dt, node, config ) {
+                    $(".mostrar_d.si").click();
+                }
+            }
+        ]
     });
 });
 
@@ -95,7 +125,22 @@ $(document).ready(function () {
                 }
             }
         ],
-        "search": { regex: true }
+        "search": { regex: true },
+        dom: 'Blfrtip',
+        buttons: [
+            {
+                text: 'MT',
+                action: function ( e, dt, node, config ) {
+                    $(".mostrar_a.no").click();
+                }
+            },
+            {
+                text: 'QT',
+                action: function ( e, dt, node, config ) {
+                    $(".mostrar_a.si").click();
+                }
+            }
+        ]
     });
 });
 

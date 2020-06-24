@@ -33,3 +33,7 @@ body{
 .mostrar_a.si,.mostrar_hijos_d.si{
     background-color: #da6c78;
 }
+
+.dt-buttons{
+    margin-bottom: 8px;
+}
