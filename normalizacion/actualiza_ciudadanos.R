@@ -11,12 +11,12 @@ ciclos <- 500
 registros_totales <- dbGetQuery(con, "select count(id_ciudadano_sintys) from ciudadanos_sintys;")
 rangos <-  ceiling(registros_totales/ciclos)
 
-n_paises <- dbGetQuery(con, "select distinct pais, provincia, municipio, ciudad, id_pais, id_provincia, id_departamento, id_asentamiento from rnpr_distincts rd")
+norma_distincts <- dbGetQuery(con, "select distinct pais, provincia, municipio, ciudad, id_pais, id_provincia, id_departamento, id_asentamiento from rnpr_distincts rd")
 
 for(i in 1:ciclos){
   
-  if(dbExistsTable(con, "segamento_actualizacion")){
-    dbRemoveTable(con, "segamento_actualizacion")
+  if(dbExistsTable(con, "segmento_actualizacion")){
+    dbRemoveTable(con, "segmento_actualizacion")
   }
   
   ciudadanos_paises <- dbGetQuery(con, paste("select id_ciudadano_sintys, pais, provincia, municipio, ciudad
@@ -26,11 +26,11 @@ for(i in 1:ciclos){
                         "limit ",rangos,";"))
   
   
-  ciudadanos_paises_normalizados <- merge(x = ciudadanos_paises, y = n_paises, by = c("pais","provincia", "municipio", "ciudad"), x.all = TRUE)
+  ciudadanos_paises_normalizados <- merge(x = ciudadanos_paises, y = norma_distincts, by = c("pais","provincia", "municipio", "ciudad"), x.all = TRUE)
   
   ciudadanos_paises_normalizados <- ciudadanos_paises_normalizados[,c("id_ciudadano_sintys","id_pais","id_provincia","id_departamento","id_asentamiento")]
   
-  dbWriteTable(con, "segamento_actualizacion", ciudadanos_paises_normalizados, row.names=TRUE, append=FALSE)
+  dbWriteTable(con, "segmento_actualizacion", ciudadanos_paises_normalizados, row.names=TRUE, append=FALSE)
   
   dbGetQuery(con, "insert into ciudadanos_domicilios 
           select NEXTVAL('id_ciudadano_domicilio'), 
@@ -43,14 +43,14 @@ for(i in 1:ciclos){
           1,
           '',
           NOW()
-          from segamento_actualizacion")
+          from segmento_actualizacion")
 
   print(paste(floor(i*100/ciclos),"% competado"))
     
 }
 
-if(dbExistsTable(con, "segamento_actualizacion")){
-  dbRemoveTable(con, "segamento_actualizacion")
+if(dbExistsTable(con, "segmento_actualizacion")){
+  dbRemoveTable(con, "segmento_actualizacion")
 }
 
 print("100% competado")

@@ -36,9 +36,11 @@ norma_provincias <- dbGetQuery(con, "select id_provincia,
                                       from provincias p 
                                       where id_pais = 12;")
 
+#revisar if completo is false
 condicion_departamentos <- "and d.id_departamento is null"
 condicion_asentamientos <- "and rd.id_asentamiento is null"
 
+#revisar if completo is false
 if(completo){
    dbGetQuery(con, "update rnpr_distincts rd set id_departamento = null where id_pais = 12;")
    condicion_departamentos <- ""
@@ -105,8 +107,9 @@ if(completo){
    
    by(norma_departamentos, 1:nrow(norma_departamentos), function(departamento){
       
+      #ver el tema de competo
       if(completo){
-         dbGetQuery(con, paste("update rnpr_distincts rd set id_asentamiento = null where id_pais = 12 and id_departamento =",departamento$id,";"))
+         dbGetQuery(con, paste("update rnpr_distincts rd set id_asentamiento = null where id_departamento =",departamento$id,";"))
       }
       
    print(paste("--- Buscando asentamientos de departamento: ",departamento$nombre,". Provincia de ",row$nombre," id_provincia:",row$id_provincia))

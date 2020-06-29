@@ -64,7 +64,7 @@ dbGetQuery(con, "UPDATE rnpr_distincts rd
                   WHERE rd.provincia = o.provincia
                   AND rd.id_pais = 12")
 
-dbRemoveTable(con,"rnpr_paises_normalizados")
+dbRemoveTable(con,"rnpr_provincias_normalizadas")
 
 
 dbDisconnect(con)
