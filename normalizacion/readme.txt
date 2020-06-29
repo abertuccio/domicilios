@@ -43,6 +43,11 @@ Se lanza script normalización.R
             Si hay algún cambio hay que tirar este script nuevamente
         Iteración de departamentos
             Se ejecuta el mismo proceso anterior pero con asentamientos
+    normalizacion_asentamientos_sin_departamento.R
+        Solo de id_provincia = 1 (CABA)
+        Se seleccionan los asentamientos cuando departamento es NULL
+        Si coinciden con asentamientos de la provincia se actualiza departamento y asentamiento
+    normalizacion_barrio_sin_asentamiento(actualiza_asentamiento).R
 
 
 
