@@ -750,28 +750,18 @@ select a.id_asentamiento, a.nombre, d.nombre_nominatim as departamento, p.nombre
           
           select * from ciudadanos_domicilios cd 
           
-          insert into ciudadanos_domicilios
-          select NEXTVAL('id_ciudadano_domicilio'), 
-          cs.id_ciudadano_sintys, 
-          rd1.id_pais, 
-          rd1.id_provincia, 
-          rd1.id_departamento, 
-          rd1.id_asentamiento,
-          'SINTYS',
+          ALTER SEQUENCE id_ciudadano_domicilio RESTART WITH 1;
+          
+          insert into ciudadanos_domicilios (id_ciudadano_sintys,estado,estado_descripcion,f_actualizacion)
+          select cs.id_ciudadano_sintys,
           1,          
-          'Desde rnpr_distincts',
+          'insert id ciudadano',
           NOW()
-          from ciudadanos_sintys cs
-          inner join rnpr_distincts rd1 on cs.pais = rd1.pais
-          inner join rnpr_distincts rd2 on cs.provincia = rd2.provincia
-          inner join rnpr_distincts rd3 on cs.municipio = rd3.municipio
-          inner join rnpr_distincts rd4 on cs.ciudad = rd4.ciudad
-          where cs.id_ciudadano_sintys not in (select id_ciudadano_sintys from ciudadanos_domicilios)
-          limit 1000000;
+          from ciudadanos_sintys cs;
          
          
          
-   select cs.id_ciudadano_sintys, 
+   select distinct cs.id_ciudadano_sintys, 
           rd1.id_pais, 
           rd1.id_provincia, 
           rd1.id_departamento, 
@@ -782,14 +772,16 @@ select a.id_asentamiento, a.nombre, d.nombre_nominatim as departamento, p.nombre
           inner join rnpr_distincts rd3 on cs.municipio = rd3.municipio
           inner join rnpr_distincts rd4 on cs.ciudad = rd4.ciudad
           where rd1.id_asentamiento = 31
-          limit 1000000;      
+          limit 100;      
          
          
          
          
          
+         select count(id_ciudadano_sintys) from ciudadanos_sintys;
+         select count(*) from ciudadanos_sintys cs 
          
-         
+         select distinct pais, id_pais from rnpr_distincts rd 
          
          
             

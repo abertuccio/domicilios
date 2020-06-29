@@ -36,11 +36,11 @@ n$p_norm <- gsub("ó", "o", n$p_norm, perl=TRUE)
 n$p_norm <- gsub("ú", "u", n$p_norm, perl=TRUE)
 
 o[,c("norm_2","id_provincia")] <- n[amatch(o$p_norm, n$p_norm, maxDist=2),][,c("nombre","id_provincia")]
-o[,c("norm_max","id_provincia")] <- n[amatch(o$p_norm, n$p_norm, maxDist=7),][,c("nombre","id_provincia")]
+#o[,c("norm_max","id_provincia")] <- n[amatch(o$p_norm, n$p_norm, maxDist=7),][,c("nombre","id_provincia")]
 
 actualizar <- data.frame(nombre = o[!is.na(o$norm_2),c("nombre")])
 
-excluidos <- data.frame(o[is.na(o$norm_2),c("nombre","norm_max")])
+#excluidos <- data.frame(o[is.na(o$norm_2),c("nombre","norm_max")])
 
 dbWriteTable(con, "rnpr_provincia_sin_pais", actualizar, row.names=TRUE, append=FALSE)
 
