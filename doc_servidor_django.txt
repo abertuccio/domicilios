@@ -1,0 +1,27 @@
+PROBABLEMENTE NECESITEMOS EL PROXY
+export http_proxy=http://USUARIO:PASS@proxy.sintys.gob.ar:8080
+export https_proxy=http://USUARIO:PASS@proxy.sintys.gob.ar:8080
+
+INSTALAMOS venv 
+sudo apt install python3-venv
+
+DENTRO DE LA CARPETA DE LA APP 
+python3 -m venv venv
+
+ACTIVAMOS EL ESPACIO VIRTUAL 
+. venv/bin/activate
+
+INSTALAMOS DJANGO
+python3 -m pip install Django
+
+VERIFICAMOS SI ESTA BIEN
+python3
+
+EN LA CONSOLA DE PYTHON 
+>>> import django
+>>> print(django.get_version())
+nos tiene que decir la versión.
+
+
+
+

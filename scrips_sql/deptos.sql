@@ -730,5 +730,70 @@ select a.id_asentamiento, a.nombre, d.nombre_nominatim as departamento, p.nombre
             where ST_SRID(ast.poligono) = 0;
             
             select id_asentamiento, ST_SRID(poligono) from asentamientos a where ST_SRID(poligono) <> 4326
+            
+           select * from ciudadanos_sintys cs; 
+           
+          select NEXTVAL('mysequence'), cs.id_ciudadano_sintys, 
+          rd1.id_pais, rd2.id_provincia, 
+          rd3.id_departamento, 
+          rd4.id_asentamiento,
+          'SINTYS',
+          1,
+          '',
+          NOW()
+          from ciudadanos_sintys cs
+          inner join rnpr_distincts rd1 on cs.pais = rd1.pais
+          inner join rnpr_distincts rd2 on cs.provincia = rd2.provincia
+          inner join rnpr_distincts rd3 on cs.municipio = rd3.municipio
+          inner join rnpr_distincts rd4 on cs.ciudad = rd4.ciudad; 
+        
+          
+          select * from ciudadanos_domicilios cd 
+          
+          insert into ciudadanos_domicilios
+          select NEXTVAL('id_ciudadano_domicilio'), 
+          cs.id_ciudadano_sintys, 
+          rd1.id_pais, 
+          rd1.id_provincia, 
+          rd1.id_departamento, 
+          rd1.id_asentamiento,
+          'SINTYS',
+          1,          
+          'Desde rnpr_distincts',
+          NOW()
+          from ciudadanos_sintys cs
+          inner join rnpr_distincts rd1 on cs.pais = rd1.pais
+          inner join rnpr_distincts rd2 on cs.provincia = rd2.provincia
+          inner join rnpr_distincts rd3 on cs.municipio = rd3.municipio
+          inner join rnpr_distincts rd4 on cs.ciudad = rd4.ciudad
+          where cs.id_ciudadano_sintys not in (select id_ciudadano_sintys from ciudadanos_domicilios)
+          limit 1000000;
+         
+         
+         
+   select cs.id_ciudadano_sintys, 
+          rd1.id_pais, 
+          rd1.id_provincia, 
+          rd1.id_departamento, 
+          rd1.id_asentamiento
+          from ciudadanos_sintys cs
+          inner join rnpr_distincts rd1 on cs.pais = rd1.pais
+          inner join rnpr_distincts rd2 on cs.provincia = rd2.provincia
+          inner join rnpr_distincts rd3 on cs.municipio = rd3.municipio
+          inner join rnpr_distincts rd4 on cs.ciudad = rd4.ciudad
+          where rd1.id_asentamiento = 31
+          limit 1000000;      
+         
+         
+         
+         
+         
+         
+         
+         
+         
+            
+            
+            
 
 

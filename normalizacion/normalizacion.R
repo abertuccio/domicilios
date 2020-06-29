@@ -1,5 +1,11 @@
 require("here")
 
+#DISTINCT DE TABLA ORIGEN
+#DEFINIR PREFIJO DE ORIGEN ACA
+#DEFINIR LAS EQUIVALENCIAS DE LOS NOMBRES DE LOS CAMPOS ACA 
+
+#HAY QUE PONER TODO EN NULL ANTES DE ARARNCAR??
+
 source(here("normalizacion_paises.R"))
 source(here("normalizacion_provincia_sin_pais.R"))
 source(here("normalizacion_provincias.R"))
