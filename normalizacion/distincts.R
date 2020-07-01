@@ -3,8 +3,8 @@ con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', 
 
 distincts <- dbGetQuery(con, "select distinct pais, provincia, municipio, ciudad from ciudadanos_sintys cs")
 
-if(dbExistsTable(con, "rnpr_distincts")){
- dbGetQuery(con, "TRUNCATE TABLE rnpr_distincts;")
-}else{
-  
-}
+# if(dbExistsTable(con, "rnpr_distincts")){
+#  dbGetQuery(con, "TRUNCATE TABLE rnpr_distincts;")
+# }
+
+dbWriteTable(con, "rnpr_distincts", distincts, row.names=TRUE, append=FALSE, overwrite=TRUE)
