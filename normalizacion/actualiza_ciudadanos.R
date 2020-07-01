@@ -8,7 +8,7 @@ print("Truncamos tabla ciudadanos_domicilios ...")
 print("calculando ciclos y rangos...")
 
 ciclos <- 350
-registros_totales <- dbGetQuery(con, "select count(id_ciudadano_sintys) from ciudadanos_sintys where estado = 0;")
+registros_totales <- dbGetQuery(con, "select count(id_ciudadano_sintys) from ciudadanos_sintys where estado = 0 or estado is null;")
 rangos <-  ceiling(registros_totales/ciclos)
 
 if(registros_totales<=ciclos){
@@ -24,6 +24,7 @@ for(i in 1:ciclos){
   ciudadanos <- dbGetQuery(con, paste("select id_ciudadano_sintys, pais, provincia, municipio, ciudad
                         from ciudadanos_sintys
                         where estado = 0 
+                        or estado is null
                         limit ",rangos,";"))
 
 

@@ -825,5 +825,7 @@ select distinct pais, provincia, municipio, ciudad from ciudadanos_sintys cs
 
 select count(*) from ciudadanos_domicilios cd
 
+TRUNCATE TABLE ciudadanos_domicilios RESTART IDENTITY;
+
 
 
