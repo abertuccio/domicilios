@@ -783,9 +783,47 @@ select a.id_asentamiento, a.nombre, d.nombre_nominatim as departamento, p.nombre
          
          select distinct pais, id_pais from rnpr_distincts rd 
          
+            select * from ciudadanos_sintys cs order by id_ciudadano_sintys asc; 
          
+            select id_ciudadano_sintys from ciudadanos_domicilios order by id_ciudadano_sintys asc;
+           
+            select id_ciudadano_sintys from ciudadanos_domicilios where id_ciudadano_sintys = 4
             
+            select cs.apellido, 
+            cs.nombres, 
+            p2.nombre as pais, 
+            p.nombre as provincia, 
+            d.nombre as departamento , 
+            a.nombre as asentamiento
+            from ciudadanos_sintys cs 
+            inner join ciudadanos_domicilios cd on cs.id_ciudadano_sintys = cd.id_ciudadano_sintys            
+            inner join paises p2 on p2.id_pais = cd.id_pais 
+            inner join provincias p on p.id_provincia = cd.id_provincia 
+            inner join departamentos d on d.id_departamento = cd.id_departamento 
+            inner join asentamientos a on a.id_asentamiento = cd.id_asentamiento 
+            where cs.ndoc = $dni;
+           
+           select * from ciudadanos_sintys cs where cs.id_ciudadano_sintys = 35625107;
+           
+           select * from ciudadanos_domicilios cd where id_ciudadano_sintys = 35625107
+          
+          select id_ciudadano_sintys, pais, provincia, municipio, ciudad
+                          from ciudadanos_sintys
+                          where id_ciudadano_sintys < 35648528
+                         and id_ciudadano_sintys > 35551657
+                         limit 96871;
             
-            
+                        select count(*)
+                         from ciudadanos_sintys
+                         where id_ciudadano_sintys <= 96871
+                        and id_ciudadano_sintys >= 0
+                        limit 96871
+
+                        select count(id_ciudadano_sintys) from ciudadanos_sintys;
+                       
+select distinct pais, provincia, municipio, ciudad from ciudadanos_sintys cs                       
+
+select count(*) from ciudadanos_domicilios cd
+
 
 
