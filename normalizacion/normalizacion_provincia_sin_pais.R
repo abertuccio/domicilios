@@ -17,8 +17,6 @@ n <- dbGetQuery(con, "select p.id_provincia, p.nombre from provincias p
                       select p.id_provincia from provincias p
                       )")
 
-print(o)
-
 o$p_norm <- tolower(o$nombre)
 o$p_norm <- gsub("[^a-záéíóúñ0-9]+", "", o$p_norm, perl=TRUE)
 o$p_norm <- gsub("á", "a", o$p_norm, perl=TRUE)

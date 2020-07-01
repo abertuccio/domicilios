@@ -6,7 +6,7 @@ source(here("estandarizacion_vectores.R"))
 con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
 
 
-oringen_asentamientos_barrios <- dbGetQuery(con, paste("select provincia,
+origen_asentamientos_barrios <- dbGetQuery(con, paste("select provincia,
                                   municipio,
                                   ciudad, 
                                   id_asentamiento,
@@ -19,7 +19,7 @@ oringen_asentamientos_barrios <- dbGetQuery(con, paste("select provincia,
                                   and ciudad <> 'SIN_INFORMAR'
                                   and id_asentamiento is null"))
 
-by(oringen_asentamientos_barrios, 1:nrow(oringen_asentamientos_barrios), function(row){
+by(origen_asentamientos_barrios, 1:nrow(origen_asentamientos_barrios), function(row){
  
   print(paste("buscando...",row$id_departamento))
   

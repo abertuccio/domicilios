@@ -7,7 +7,7 @@ dbGetQuery(con, "TRUNCATE TABLE ciudadanos_domicilios RESTART IDENTITY;")
 
 print("calculando ciclos y rangos...")
 
-ciclos <- 500
+ciclos <- 300
 registros_totales <- dbGetQuery(con, "select count(id_ciudadano_sintys) from ciudadanos_sintys;")
 rangos <-  ceiling(registros_totales/ciclos)
 
@@ -21,23 +21,26 @@ for(i in 1:ciclos){
   
   ciudadanos_paises <- dbGetQuery(con, paste("select id_ciudadano_sintys, pais, provincia, municipio, ciudad
                         from ciudadanos_sintys
-                        where id_ciudadano_sintys < ",rangos*i,
-                        "and id_ciudadano_sintys > ", rangos*(i-1),
+                        where id_ciudadano_sintys <= ",rangos*i,
+                        "and id_ciudadano_sintys >= ", rangos*(i-1),
                         "limit ",rangos,";"))
-  
-  
-  ciudadanos_paises_normalizados <- merge(x = ciudadanos_paises, y = norma_distincts, by = c("pais","provincia", "municipio", "ciudad"), x.all = TRUE)
-  
+
+
+  # ant_mer <- nrow(ciudadanos_paises)
+  ciudadanos_paises_normalizados <- merge(x = ciudadanos_paises, y = norma_distincts, by = c("pais","provincia", "municipio", "ciudad"), all.x = TRUE)
+  # mer <- nrow(ciudadanos_paises_normalizados)
+  # print(paste("anterior: ",ant_mer," posterior: ",mer))
+
   ciudadanos_paises_normalizados <- ciudadanos_paises_normalizados[,c("id_ciudadano_sintys","id_pais","id_provincia","id_departamento","id_asentamiento")]
   
   dbWriteTable(con, "segmento_actualizacion", ciudadanos_paises_normalizados, row.names=TRUE, append=FALSE)
-  
-  dbGetQuery(con, "insert into ciudadanos_domicilios 
-          select NEXTVAL('id_ciudadano_domicilio'), 
-          id_ciudadano_sintys, 
+
+  dbGetQuery(con, "insert into ciudadanos_domicilios
+          select NEXTVAL('id_ciudadano_domicilio'),
+          id_ciudadano_sintys,
           id_pais,
-          id_provincia, 
-          id_departamento, 
+          id_provincia,
+          id_departamento,
           id_asentamiento,
           'SINTYS',
           1,
@@ -46,7 +49,7 @@ for(i in 1:ciclos){
           from segmento_actualizacion")
 
   print(paste(floor(i*100/ciclos),"% competado"))
-    
+
 }
 
 if(dbExistsTable(con, "segmento_actualizacion")){
