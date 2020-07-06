@@ -6,3 +6,4 @@ frontend/poligonos/departamentos/*
 !frontend/poligonos/departamentos/.gitkeep 
 frontend/poligonos/provincias/*
 !frontend/poligonos/provincias/.gitkeep 
+extraccion_calles/argentina-latest.osm.pbf
