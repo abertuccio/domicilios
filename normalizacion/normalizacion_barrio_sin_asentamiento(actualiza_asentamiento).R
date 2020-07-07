@@ -3,7 +3,7 @@ require("stringdist")
 require("here")
 source(here("estandarizacion_vectores.R"))
 
-con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
+con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=9999, user='postgres', password=1234)
 
 
 origen_asentamientos_barrios <- dbGetQuery(con, paste("select provincia,

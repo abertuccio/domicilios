@@ -1,5 +1,5 @@
 require("RPostgreSQL")
-con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
+con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=9999, user='postgres', password=1234)
 
 print("Truncamos tabla ciudadanos_domicilios ...")
 
@@ -16,7 +16,7 @@ if(registros_totales<=ciclos){
   rangos <- registros_totales   
 }
 
-norma_distincts <- dbGetQuery(con, "select distinct pais, provincia, municipio, ciudad, id_pais, id_provincia, id_departamento, id_asentamiento from rnpr_distincts rd")
+norma_distincts <- dbGetQuery(con, "select distinct pais, provincia, municipio, ciudad, id_pais, id_provincia, id_departamento, id_asentamiento from smap.rnpr_distincts rd")
 
 
 for(i in 1:ciclos){

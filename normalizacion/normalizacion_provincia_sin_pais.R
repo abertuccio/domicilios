@@ -1,10 +1,10 @@
 require("RPostgreSQL")
 require("stringdist")
 
-con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
+con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=9999, user='postgres', password=1234)
 
 
-o <- dbGetQuery(con, "select distinct(provincia) as nombre from rnpr_distincts rd
+o <- dbGetQuery(con, "select distinct(provincia) as nombre from smap.rnpr_distincts rd
                           where regexp_replace(regexp_replace(rd.pais, '^\\s+', ''), '\\s+$', '') = ''
                           or pais = ' '
                           or pais is null")
@@ -40,16 +40,16 @@ actualizar <- data.frame(nombre = o[!is.na(o$norm_2),c("nombre")])
 
 #excluidos <- data.frame(o[is.na(o$norm_2),c("nombre","norm_max")])
 
-dbWriteTable(con, "rnpr_provincia_sin_pais", actualizar, row.names=TRUE, append=FALSE)
+dbWriteTable(con, "smap.rnpr_provincia_sin_pais", actualizar, row.names=TRUE, append=FALSE)
 
-dbGetQuery(con, "UPDATE rnpr_distincts rd
+dbGetQuery(con, "UPDATE smap.rnpr_distincts rd
                   SET id_pais = 12
-                  FROM rnpr_provincia_sin_pais n
+                  FROM smap.rnpr_provincia_sin_pais n
                   WHERE rd.provincia = n.nombre
                   and regexp_replace(regexp_replace(rd.pais, '^\\s+', ''), '\\s+$', '') = '' 
                   or pais is null")
 
-dbRemoveTable(con, "rnpr_provincia_sin_pais")
+dbRemoveTable(con, "smap.rnpr_provincia_sin_pais")
 
 dbDisconnect(con)
 

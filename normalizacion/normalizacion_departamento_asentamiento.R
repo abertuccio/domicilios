@@ -5,30 +5,30 @@ source(here("normalizacion_general_function.R"))
 
 completo <- TRUE
 
-con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
+con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=9999, user='postgres', password=1234)
 
-if(dbExistsTable(con, "rnpr_reporte_normalizacion")){
-   dbRemoveTable(con, "rnpr_reporte_normalizacion")
+if(dbExistsTable(con, "smap.rnpr_reporte_normalizacion")){
+   dbRemoveTable(con, "smap.rnpr_reporte_normalizacion")
 }
 
-if(dbExistsTable(con, "rnpr_departamentos_inexistentes_en_origen")){
-   dbRemoveTable(con, "rnpr_departamentos_inexistentes_en_origen")
+if(dbExistsTable(con, "smap.rnpr_departamentos_inexistentes_en_origen")){
+   dbRemoveTable(con, "smap.rnpr_departamentos_inexistentes_en_origen")
 }
 
-if(dbExistsTable(con, "rnpr_departamentos_normalizados")){
-   dbRemoveTable(con, "rnpr_departamentos_normalizados")
+if(dbExistsTable(con, "smap.rnpr_departamentos_normalizados")){
+   dbRemoveTable(con, "smap.rnpr_departamentos_normalizados")
 }
 
-if(dbExistsTable(con, "rnpr_asentamientos_normalizados")){
-   dbRemoveTable(con, "rnpr_asentamientos_normalizados")
+if(dbExistsTable(con, "smap.rnpr_asentamientos_normalizados")){
+   dbRemoveTable(con, "smap.rnpr_asentamientos_normalizados")
 }
 
-if(dbExistsTable(con, "rnpr_departamentos_excluidos")){
-      dbRemoveTable(con,"rnpr_departamentos_excluidos")
+if(dbExistsTable(con, "smap.rnpr_departamentos_excluidos")){
+      dbRemoveTable(con,"smap.rnpr_departamentos_excluidos")
 }
 
-if(dbExistsTable(con, "rnpr_asentamientos_excluidos")){
-   dbRemoveTable(con,"rnpr_asentamientos_excluidos")
+if(dbExistsTable(con, "smap.rnpr_asentamientos_excluidos")){
+   dbRemoveTable(con,"smap.rnpr_asentamientos_excluidos")
 }
 
 norma_provincias <- dbGetQuery(con, "select id_provincia,
@@ -42,7 +42,7 @@ condicion_asentamientos <- "and rd.id_asentamiento is null"
 
 #revisar if completo is false
 if(completo){
-   dbGetQuery(con, "update rnpr_distincts rd set id_departamento = null where id_pais = 12;")
+   dbGetQuery(con, "update smap.rnpr_distincts rd set id_departamento = null where id_pais = 12;")
    condicion_departamentos <- ""
    condicion_asentamientos <- ""
 }
@@ -52,7 +52,7 @@ if(completo){
     print(paste("---> Buscando provincia: ",row$nombre))
     
    origen_departamentos <- dbGetQuery(con, paste("select distinct municipio as nombre
-                                            from rnpr_distincts rd
+                                            from smap.rnpr_distincts rd
                                             where id_pais = 12
                                            and id_provincia = ",row$id_provincia))
    
@@ -83,19 +83,19 @@ if(completo){
    
    
    
-  dbWriteTable(con, "rnpr_departamentos_normalizados", departamentos, row.names=TRUE, append=FALSE)
+  dbWriteTable(con, "smap.rnpr_departamentos_normalizados", departamentos, row.names=TRUE, append=FALSE)
    
    
    print(paste("---> Actualizando departamentos de: ",row$nombre))
    
-   dbGetQuery(con, paste("UPDATE rnpr_distincts rd
+   dbGetQuery(con, paste("UPDATE smap.rnpr_distincts rd
                   SET id_departamento = n.id
-                  FROM rnpr_departamentos_normalizados n
+                  FROM smap.rnpr_departamentos_normalizados n
                   WHERE rd.municipio = n.nombre
                   AND rd.id_pais = 12
                   AND rd.id_provincia = ",row$id_provincia))
    
-   dbRemoveTable(con, "rnpr_departamentos_normalizados")
+   dbRemoveTable(con, "smap.rnpr_departamentos_normalizados")
    
    print("--------------------------------------------- ")
    print(paste("--- Finalizado departamentos de provincia de ",row$nombre))
@@ -109,13 +109,13 @@ if(completo){
       
       #ver el tema de competo
       if(completo){
-         dbGetQuery(con, paste("update rnpr_distincts rd set id_asentamiento = null where id_departamento =",departamento$id,";"))
+         dbGetQuery(con, paste("update smap.rnpr_distincts rd set id_asentamiento = null where id_departamento =",departamento$id,";"))
       }
       
    print(paste("--- Buscando asentamientos de departamento: ",departamento$nombre,". Provincia de ",row$nombre," id_provincia:",row$id_provincia))
       
       origen_asentamientos <- dbGetQuery(con, paste("select ciudad as nombre
-                                                    from rnpr_distincts rd 
+                                                    from smap.rnpr_distincts rd 
                                                     where id_departamento = ",departamento$id,
                                                     " ",condicion_asentamientos))
       
@@ -143,7 +143,7 @@ if(completo){
         
         dep_inex <- data.frame(id_provincia = c(row$id_provincia), id_departamento = c(departamento$id),nombre = c(departamento$nombre))
         
-        dbWriteTable(con, "rnpr_departamentos_inexistentes_en_origen", dep_inex, row.names=TRUE, append=TRUE)
+        dbWriteTable(con, "smap.rnpr_departamentos_inexistentes_en_origen", dep_inex, row.names=TRUE, append=TRUE)
         
      }
    else{
@@ -153,18 +153,18 @@ if(completo){
                                      nivel = "asentamientos",
                                      id_padre = departamento$id)
       
-      dbWriteTable(con, "rnpr_asentamientos_normalizados", asentamientos, row.names=TRUE, append=FALSE)
+      dbWriteTable(con, "smap.rnpr_asentamientos_normalizados", asentamientos, row.names=TRUE, append=FALSE)
       
       
-      dbGetQuery(con, paste("UPDATE rnpr_distincts rd
+      dbGetQuery(con, paste("UPDATE smap.rnpr_distincts rd
                   SET id_asentamiento = n.id
-                  FROM rnpr_asentamientos_normalizados n
+                  FROM smap.rnpr_asentamientos_normalizados n
                   WHERE rd.ciudad = n.nombre
                   AND rd.id_pais = 12
                   AND rd.id_provincia = ",row$id_provincia,
                             "AND rd.id_departamento = ",departamento$id))
       
-      dbRemoveTable(con, "rnpr_asentamientos_normalizados")
+      dbRemoveTable(con, "smap.rnpr_asentamientos_normalizados")
       
    }
    

@@ -16,7 +16,7 @@ o$pre_norm <- tolower(o[[COLUMNA_ORIGEN]])
 
 o$pre_norm <- gsub("[^a-záéíóúñ ]+", "", o$pre_norm, perl=TRUE)
 
-con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=6432, user='postgres', password=1234)
+con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=6432, user='postgres', password=1234)
 
 query <- paste("select d.codigo,
                d.nombre
