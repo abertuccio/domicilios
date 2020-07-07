@@ -3,6 +3,10 @@ con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port
 
 print("calculando ciclos y rangos...")
 
+if(dbExistsTable(con, "segmento_actualizacion")){
+  dbRemoveTable(con,"segmento_actualizacion")
+}
+
 ciclos <- 350
 registros_totales <- dbGetQuery(con, "select count(id_ciudadano_renaper) from inicial.ciudadanos_renaper where estado = 0 or estado is null;")
 rangos <-  ceiling(registros_totales/ciclos)
@@ -31,7 +35,7 @@ for(i in 1:ciclos){
 
   ciudadanos_normalizados <- ciudadanos_normalizados[,c("id_ciudadano_renaper","id_pais","id_provincia","id_departamento","id_asentamiento")]
   
-  dbWriteTable(con, "public.segmento_actualizacion", ciudadanos_normalizados, row.names=TRUE, append=FALSE, overwrite=TRUE)
+  dbWriteTable(con, "segmento_actualizacion", ciudadanos_normalizados, row.names=TRUE, append=FALSE)
 
   dbGetQuery(con, "insert into detergido.ciudadanos_domicilios
           select NEXTVAL('detergido.id_ciudadano_domicilio'),
@@ -44,11 +48,13 @@ for(i in 1:ciclos){
           1,
           '',
           NOW()
-          from segmento_actualizacion")
+          from public.segmento_actualizacion")
   
   dbGetQuery(con, "update inicial.ciudadanos_renaper set estado = 1 
                     where id_ciudadano_renaper in (select id_ciudadano_renaper from public.segmento_actualizacion)")
 
+  dbRemoveTable(con,"segmento_actualizacion")
+  
   print(paste(floor(i*100/ciclos),"% competado"))
 
 }
