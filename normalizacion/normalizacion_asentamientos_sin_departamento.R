@@ -1,12 +1,10 @@
 require("RPostgreSQL")
 require("stringdist")
-
+require("here")
+source(here("./config/conexion.R"))
 id_provincia <- 1  #SOLO CABA POR AHORA
 
-con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=9999, user='postgres', password=1234)
-
-
-o <- dbGetQuery(con, paste("select municipio,ciudad, 
+o <- dbGetQuery(pg_con, paste("select municipio,ciudad, 
                                           id_pais,
                                           id_provincia 
                                           from smap.rnpr_distincts rd 
@@ -16,7 +14,7 @@ o <- dbGetQuery(con, paste("select municipio,ciudad,
                                           and ciudad <> 'SIN_INFORMAR'
                                           and id_provincia = ",id_provincia))
 
-n <- dbGetQuery(con, paste("select a2.id_asentamiento, 
+n <- dbGetQuery(pg_con, paste("select a2.id_asentamiento, 
                             a2.nombre, 
                             a2.id_departamento
                             from asentamientos a2 
@@ -62,9 +60,9 @@ actualizar <- o[!is.na(o$norm_2),c("municipio","ciudad","id_pais","id_provincia"
 
 excluidos <- data.frame(o[is.na(o$norm_2),c("ciudad","norm_max")])
 
- dbWriteTable(con, "smap.rnpr_asentamientos_sin_departamentos", actualizar, row.names=TRUE, append=FALSE)
+ dbWriteTable(pg_con, c("smap","rnpr_asentamientos_sin_departamentos"), value=actualizar, row.names=TRUE, append=FALSE)
  
- dbGetQuery(con, paste("UPDATE smap.rnpr_distincts rd
+ dbGetQuery(pg_con, paste("UPDATE smap.rnpr_distincts rd
                    SET id_asentamiento = n.id_asentamiento,
                    id_departamento = n.id_departamento
                    FROM smap.rnpr_asentamientos_sin_departamentos n
@@ -73,9 +71,9 @@ excluidos <- data.frame(o[is.na(o$norm_2),c("ciudad","norm_max")])
                    AND rd.id_pais = 12
                    AND rd.id_provincia = ",id_provincia))
  
- dbRemoveTable(con, "smap.rnpr_asentamientos_sin_departamentos")
+ dbRemoveTable(pg_con, c("smap","rnpr_asentamientos_sin_departamentos"))
 
-dbDisconnect(con)
+dbDisconnect(pg_con)
 
 
 

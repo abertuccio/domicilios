@@ -1,15 +1,14 @@
 require("RPostgreSQL")
 require("stringdist")
+require("here")
+source(here("./config/conexion.R"))
 
-con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=9999, user='postgres', password=1234)
-
-
-o <- dbGetQuery(con, "select distinct(provincia) as nombre from smap.rnpr_distincts rd
+o <- dbGetQuery(pg_con, "select distinct(provincia) as nombre from smap.rnpr_distincts rd
                           where regexp_replace(regexp_replace(rd.pais, '^\\s+', ''), '\\s+$', '') = ''
                           or pais = ' '
                           or pais is null")
 
-n <- dbGetQuery(con, "select p.id_provincia, p.nombre from provincias p 
+n <- dbGetQuery(pg_con, "select p.id_provincia, p.nombre from provincias p 
                       where p.id_pais = 12
                       union 
                       select sp.id_provincia, sp.sinonimo as nombre from sinonimos_provincias sp 
@@ -40,18 +39,18 @@ actualizar <- data.frame(nombre = o[!is.na(o$norm_2),c("nombre")])
 
 #excluidos <- data.frame(o[is.na(o$norm_2),c("nombre","norm_max")])
 
-dbWriteTable(con, "smap.rnpr_provincia_sin_pais", actualizar, row.names=TRUE, append=FALSE)
+dbWriteTable(pg_con, c("smap","rnpr_provincia_sin_pais"), value=actualizar, row.names=TRUE, append=FALSE)
 
-dbGetQuery(con, "UPDATE smap.rnpr_distincts rd
+dbGetQuery(pg_con, "UPDATE smap.rnpr_distincts rd
                   SET id_pais = 12
                   FROM smap.rnpr_provincia_sin_pais n
                   WHERE rd.provincia = n.nombre
                   and regexp_replace(regexp_replace(rd.pais, '^\\s+', ''), '\\s+$', '') = '' 
                   or pais is null")
 
-dbRemoveTable(con, "smap.rnpr_provincia_sin_pais")
+dbRemoveTable(pg_con, c("smap","rnpr_provincia_sin_pais"))
 
-dbDisconnect(con)
+dbDisconnect(pg_con)
 
 
 

@@ -1,14 +1,15 @@
 require("RPostgreSQL")
-con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=9999, user='postgres', password=1234)
+require("here")
+source(here("./config/conexion.R"))
 
 print("calculando ciclos y rangos...")
 
-if(dbExistsTable(con, "segmento_actualizacion")){
-  dbRemoveTable(con,"segmento_actualizacion")
+if(dbExistsTable(pg_con, c("public","segmento_actualizacion"))){
+  dbRemoveTable(pg_con, c("public","segmento_actualizacion"))
 }
 
 ciclos <- 350
-registros_totales <- dbGetQuery(con, "select count(id_ciudadano_renaper) from inicial.ciudadanos_renaper where estado = 0 or estado is null;")
+registros_totales <- dbGetQuery(pg_con, "select count(id_ciudadano_renaper) from inicial.ciudadanos_renaper where estado = 0 or estado is null;")
 rangos <-  ceiling(registros_totales/ciclos)
 
 if(registros_totales<=ciclos){
@@ -16,12 +17,12 @@ if(registros_totales<=ciclos){
   rangos <- registros_totales   
 }
 
-norma_distincts <- dbGetQuery(con, "select distinct pais, provincia, municipio, ciudad, id_pais, id_provincia, id_departamento, id_asentamiento from smap.rnpr_distincts rd")
+norma_distincts <- dbGetQuery(pg_con, "select distinct pais, provincia, municipio, ciudad, id_pais, id_provincia, id_departamento, id_asentamiento from smap.rnpr_distincts rd")
 
 
 for(i in 1:ciclos){
   
-  ciudadanos <- dbGetQuery(con, paste("select id_ciudadano_renaper, pais, provincia, municipio, ciudad
+  ciudadanos <- dbGetQuery(pg_con, paste("select id_ciudadano_renaper, pais, provincia, municipio, ciudad
                         from inicial.ciudadanos_renaper
                         where estado = 0 
                         or estado is null
@@ -35,9 +36,9 @@ for(i in 1:ciclos){
 
   ciudadanos_normalizados <- ciudadanos_normalizados[,c("id_ciudadano_renaper","id_pais","id_provincia","id_departamento","id_asentamiento")]
   
-  dbWriteTable(con, "segmento_actualizacion", ciudadanos_normalizados, row.names=TRUE, append=FALSE)
+  dbWriteTable(pg_con, "segmento_actualizacion", ciudadanos_normalizados, row.names=TRUE, append=FALSE)
 
-  dbGetQuery(con, "insert into detergido.ciudadanos_domicilios
+  dbGetQuery(pg_con, "insert into detergido.ciudadanos_domicilios
           select NEXTVAL('detergido.id_ciudadano_domicilio'),
           id_ciudadano_renaper,
           id_pais,
@@ -50,19 +51,19 @@ for(i in 1:ciclos){
           NOW()
           from public.segmento_actualizacion")
   
-  dbGetQuery(con, "update inicial.ciudadanos_renaper set estado = 1 
+  dbGetQuery(pg_con, "update inicial.ciudadanos_renaper set estado = 1 
                     where id_ciudadano_renaper in (select id_ciudadano_renaper from public.segmento_actualizacion)")
 
-  dbRemoveTable(con,"segmento_actualizacion")
+  dbRemoveTable(pg_con, c("public","segmento_actualizacion"))
   
   print(paste(floor(i*100/ciclos),"% competado"))
 
 }
 
-if(dbExistsTable(con, "segmento_actualizacion")){
-  dbRemoveTable(con, "segmento_actualizacion")
+if(dbExistsTable(pg_con, c("public","segmento_actualizacion"))){
+  dbRemoveTable(pg_con, c("public","segmento_actualizacion"))
 }
 
 print("100% competado")
 
-dbDisconnect(con)
+dbDisconnect(pg_con)

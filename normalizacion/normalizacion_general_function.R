@@ -43,7 +43,7 @@ normalizacion <- function(o,n,nivel,id_padre){
 
   if(nrow(excluidos)>0){#ver si esto va
    excluidos$id_padre <- id_padre
-   dbWriteTable(con, paste("smap.rnpr_",nivel,"_excluidos",sep = ""), excluidos, row.names=TRUE, append=TRUE)
+   dbWriteTable(con, paste(c("smap","rnpr_"),nivel,"_excluidos",sep = ""), value=excluidos, row.names=TRUE, append=TRUE)
   }
   
   
@@ -65,7 +65,7 @@ normalizacion <- function(o,n,nivel,id_padre){
                         total_normalizados=c(NORMALIZADOS),
                         porcentaje_no_normalizado=c(PORCENTAJE_NO_NORMALIZADO)) 
   
-  dbWriteTable(con, "smap.rnpr_reporte_normalizacion", reporte, row.names=TRUE, append=TRUE)
+  dbWriteTable(con, c("smap","rnpr_reporte_normalizacion"), value=reporte, row.names=TRUE, append=TRUE)
 
 return(o)
 
