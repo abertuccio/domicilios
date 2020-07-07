@@ -1,14 +1,10 @@
 require("RPostgreSQL")
 con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=9999, user='postgres', password=1234)
 
-print("Truncamos tabla ciudadanos_domicilios ...")
-
-# dbGetQuery(con, "TRUNCATE TABLE ciudadanos_domicilios RESTART IDENTITY;")
-
 print("calculando ciclos y rangos...")
 
 ciclos <- 350
-registros_totales <- dbGetQuery(con, "select count(id_ciudadano_sintys) from ciudadanos_sintys where estado = 0 or estado is null;")
+registros_totales <- dbGetQuery(con, "select count(id_ciudadano_renaper) from inicial.ciudadanos_renaper where estado = 0 or estado is null;")
 rangos <-  ceiling(registros_totales/ciclos)
 
 if(registros_totales<=ciclos){
@@ -21,8 +17,8 @@ norma_distincts <- dbGetQuery(con, "select distinct pais, provincia, municipio, 
 
 for(i in 1:ciclos){
   
-  ciudadanos <- dbGetQuery(con, paste("select id_ciudadano_sintys, pais, provincia, municipio, ciudad
-                        from ciudadanos_sintys
+  ciudadanos <- dbGetQuery(con, paste("select id_ciudadano_renaper, pais, provincia, municipio, ciudad
+                        from inicial.ciudadanos_renaper
                         where estado = 0 
                         or estado is null
                         limit ",rangos,";"))
@@ -33,13 +29,13 @@ for(i in 1:ciclos){
   # mer <- nrow(ciudadanos_normalizados)
   # print(paste("anterior: ",ant_mer," posterior: ",mer))
 
-  ciudadanos_normalizados <- ciudadanos_normalizados[,c("id_ciudadano_sintys","id_pais","id_provincia","id_departamento","id_asentamiento")]
+  ciudadanos_normalizados <- ciudadanos_normalizados[,c("id_ciudadano_renaper","id_pais","id_provincia","id_departamento","id_asentamiento")]
   
-  dbWriteTable(con, "segmento_actualizacion", ciudadanos_normalizados, row.names=TRUE, append=FALSE, overwrite=TRUE)
+  dbWriteTable(con, "public.segmento_actualizacion", ciudadanos_normalizados, row.names=TRUE, append=FALSE, overwrite=TRUE)
 
-  dbGetQuery(con, "insert into ciudadanos_domicilios
-          select NEXTVAL('id_ciudadano_domicilio'),
-          id_ciudadano_sintys,
+  dbGetQuery(con, "insert into detergido.ciudadanos_domicilios
+          select NEXTVAL('detergido.id_ciudadano_domicilio'),
+          id_ciudadano_renaper,
           id_pais,
           id_provincia,
           id_departamento,
@@ -50,8 +46,8 @@ for(i in 1:ciclos){
           NOW()
           from segmento_actualizacion")
   
-  dbGetQuery(con, "update ciudadanos_sintys set estado = 1 
-                    where id_ciudadano_sintys in (select id_ciudadano_sintys from segmento_actualizacion)")
+  dbGetQuery(con, "update inicial.ciudadanos_renaper set estado = 1 
+                    where id_ciudadano_renaper in (select id_ciudadano_renaper from public.segmento_actualizacion)")
 
   print(paste(floor(i*100/ciclos),"% competado"))
 
