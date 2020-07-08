@@ -1,24 +1,24 @@
 require("RPostgreSQL")
 require("stringdist")
+require("here")
+source(here("./config/conexion.R"))
 
-con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=9999, user='postgres', password=1234)
-
-if(dbExistsTable(con, "smap.rnpr_provincias_excluidas")){
-  dbRemoveTable(con,"smap.rnpr_provincias_excluidas")
+if(dbExistsTable((pg_con, c("smap","rnpr_provincias_excluidas"))){
+  dbRemoveTable((pg_con, c("smap","rnpr_provincias_excluidas"))
 }
 
-if(dbExistsTable(con, "smap.rnpr_provincias_normalizadas")){
-  dbRemoveTable(con,"smap.rnpr_provincias_normalizadas")
+if(dbExistsTable((pg_con, c("smap","rnpr_provincias_normalizadas"))){
+  dbRemoveTable((pg_con, c("smap","rnpr_provincias_normalizadas"))
 }
 
-dbGetQuery(con, "update smap.rnpr_distincts rd set id_provincia = null where id_pais = 12")
+dbGetQuery((pg_con, "update smap.rnpr_distincts rd set id_provincia = null where id_pais = 12")
 
-o <- dbGetQuery(con, "select distinct provincia as nombre from smap.rnpr_distincts where id_pais = 12")
+o <- dbGetQuery((pg_con, "select distinct provincia as nombre from smap.rnpr_distincts where id_pais = 12")
 
 o$p_norm <- trimws(o$nombre)
 o <- o[o$p_norm != '',]
 
-n <- dbGetQuery(con, "select id_provincia as id,
+n <- dbGetQuery((pg_con, "select id_provincia as id,
                               nombre
                               from provincias p
                               union 
@@ -49,22 +49,22 @@ o$dist <- stringdist(o$p_norm,o$norm_max)
 
 excluidos <- data.frame(o[is.na(o$norm_2),c("nombre","norm_max","dist")])
 
-dbWriteTable(con, "smap.rnpr_provincias_excluidas", excluidos, row.names=TRUE, append=FALSE)
+dbWriteTable((pg_con, c("smap","rnpr_provincias_excluidas"), value=excluidos, row.names=TRUE, append=FALSE)
 
 o$id_provincia <- o[,"codigo_2"]
 o$provincia <- o[,"nombre"]
 o <-o[,c("id_provincia","provincia")]
 
-dbWriteTable(con, "smap.rnpr_provincias_normalizadas", o, row.names=TRUE, append=FALSE)
+dbWriteTable((pg_con, c("smap","rnpr_provincias_normalizadas"), value=o, row.names=TRUE, append=FALSE)
 
 
-dbGetQuery(con, "UPDATE smap.rnpr_distincts rd
+dbGetQuery((pg_con, "UPDATE smap.rnpr_distincts rd
                   SET id_provincia = o.id_provincia
                   FROM smap.rnpr_provincias_normalizadas o
                   WHERE rd.provincia = o.provincia
                   AND rd.id_pais = 12")
 
-dbRemoveTable(con,"smap.rnpr_provincias_normalizadas")
+dbRemoveTable((pg_con,"smap.rnpr_provincias_normalizadas")
 
 
-dbDisconnect(con)
+dbDisconnect((pg_con)

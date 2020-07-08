@@ -2,11 +2,9 @@ require("RPostgreSQL")
 require("stringdist")
 require("here")
 source(here("estandarizacion_vectores.R"))
+source(here("./config/conexion.R"))
 
-con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'pgsint', host='localhost', port=9999, user='postgres', password=1234)
-
-
-origen_asentamientos_barrios <- dbGetQuery(con, paste("select provincia,
+origen_asentamientos_barrios <- dbGetQuery(pg_con, paste("select provincia,
                                   municipio,
                                   ciudad, 
                                   id_asentamiento,
@@ -23,7 +21,7 @@ by(origen_asentamientos_barrios, 1:nrow(origen_asentamientos_barrios), function(
  
   print(paste("buscando...",row$id_departamento))
   
-  n <- dbGetQuery(con, paste("select b3.id_barrio, b3.nombre, b3.id_asentamiento from barrios b3
+  n <- dbGetQuery(pg_con, paste("select b3.id_barrio, b3.nombre, b3.id_asentamiento from barrios b3
                             inner join asentamientos a on b3.id_asentamiento = a.id_asentamiento 
                             inner join departamentos d on d.id_departamento = a.id_departamento
                             where a.id_departamento = ",row$id_departamento,
@@ -71,7 +69,7 @@ by(origen_asentamientos_barrios, 1:nrow(origen_asentamientos_barrios), function(
       
       print(paste("actualizando...",actualizar$id_asentamiento))
       
-      dbGetQuery(con, paste("UPDATE rnpr_distincts rd 
+      dbGetQuery(pg_con, paste("UPDATE rnpr_distincts rd 
                             SET id_asentamiento = ",actualizar$id_asentamiento,",
                             id_barrio = ",actualizar$id_barrio, " 
                             WHERE rd.ciudad = '",actualizar$ciudad,"' 
@@ -79,7 +77,7 @@ by(origen_asentamientos_barrios, 1:nrow(origen_asentamientos_barrios), function(
                             AND rd.id_pais = 12 
                             AND rd.id_provincia = ",actualizar$id_provincia,sep = ''))
       
-      dbGetQuery(con, paste("DELETE from rnpr_asentamientos_excluidos
+      dbGetQuery(pg_con, paste("DELETE from rnpr_asentamientos_excluidos
                             where nombre = '",actualizar$ciudad,"'
                              and id_padre = ",actualizar$id_departamento,sep=''))
 
@@ -92,7 +90,7 @@ by(origen_asentamientos_barrios, 1:nrow(origen_asentamientos_barrios), function(
 
 print("FIN")
 
-dbDisconnect(con)
+dbDisconnect(pg_con)
 
 
 
