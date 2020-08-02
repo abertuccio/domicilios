@@ -6,6 +6,6 @@ pg_con <- dbConnect(
   host='localhost', 
   port=9999, 
   user='postgres', 
-  password=1234)
+  password='pasword')
   
 return(pg_con)
