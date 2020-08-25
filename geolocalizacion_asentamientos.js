@@ -4,9 +4,9 @@ const nominatim_api = require('./nominatim_api');
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
-  database: 'domicilios',
+  database: 'dbname',
   password: 'password',
-  port: 9999,
+  port: 0000,
   idleTimeoutMillis: 0,
   connectionTimeoutMillis: 0,
 });
