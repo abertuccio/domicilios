@@ -2,9 +2,9 @@ require("RPostgreSQL")
 
 pg_con <- dbConnect(
   dbDriver("PostgreSQL"), 
-  dbname = 'pgsint', 
+  dbname = 'dbname', 
   host='localhost', 
-  port=9999, 
+  port=0000, 
   user='postgres', 
   password='pasword')
   
