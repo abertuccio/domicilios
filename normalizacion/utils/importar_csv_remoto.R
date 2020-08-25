@@ -1,6 +1,6 @@
   require("RPostgreSQL")
 
-con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'domicilios', host='localhost', port=9999, user='postgres', password=1234)
+con<-dbConnect(dbDriver("PostgreSQL"), dbname = 'dbname', host='localhost', port=0000, user='postgres', password='password')
 
 barha <- read.csv("http://www.bahra.gob.ar/descargas/archivos/base_total/base_total.csv")
 
